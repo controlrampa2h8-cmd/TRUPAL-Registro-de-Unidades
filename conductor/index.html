@@ -583,12 +583,39 @@
         localStorage.setItem('turno_activo_trupal', JSON.stringify(miRegistroLocal));
 
         alert("¡Registro exitoso! Tu unidad ya está en cola.");
-        evaluarTurnoGuardado();
-        cambiarPestana('turnos');
+        async function evaluarTurnoGuardado() {
+      if (!miRegistroLocal) return;
+
+      try {
+        // Consultamos a Firestore si el turno realmente sigue vivo
+        const docSnap = await db.collection('registros_turnos').doc(miRegistroLocal.id).get();
+
+        if (!docSnap.exists) {
+          // Si fue borrado de la base de datos, limpiamos el celular por completo
+          localStorage.removeItem('turno_activo_trupal');
+          miRegistroLocal = null;
+          document.getElementById('bannerBloqueoSegundaUnidad').classList.add('hidden');
+          document.getElementById('cardMiTurno').classList.add('hidden');
+          return;
+        }
+
+        const dataTurno = docSnap.data();
+        const estadosCerrados = ['DESPACHADO', 'CANCELADO_VOLUNTARIO', 'RECHAZADO_RAMPA', 'ANULADO'];
+
+        if (estadosCerrados.includes(dataTurno.estado)) {
+          // Si ya terminó su ciclo, también liberamos el celular
+          localStorage.removeItem('turno_activo_trupal');
+          miRegistroLocal = null;
+          document.getElementById('bannerBloqueoSegundaUnidad').classList.add('hidden');
+          document.getElementById('cardMiTurno').classList.add('hidden');
+        } else {
+          // El turno sigue activo en Firestore: mostramos aviso y tarjeta
+          document.getElementById('bannerBloqueoSegundaUnidad').classList.remove('hidden');
+          document.getElementById('placaActivaText').innerText = miRegistroLocal.placa;
+          actualizarMiTurno();
+        }
       } catch (err) {
-        alert("Error al registrar: " + err.message);
-        btn.disabled = false;
-        btn.innerText = "Tomar Turno de Llegada";
+        console.error("Error al validar turno activo:", err);
       }
     }
 
