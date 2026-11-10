@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Registro de Unidades - TRUPAL Huachipa 2</title>
+  <!-- Tailwind CSS y FontAwesome -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  
+  <!-- Firebase Compat Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  
+  <!-- Tus credenciales compartidas -->
+  <script src="../shared/firebase-init.js"></script>
+
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .touch-target { min-height: 52px; }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased pb-12">
+
+  <!-- CABECERA -->
+  <header class="bg-blue-700 text-white p-4 shadow-md sticky top-0 z-30">
+    <div class="max-w-md mx-auto flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center font-bold text-lg">
+          <i class="fa-solid fa-truck-ramp-box"></i>
+        </div>
+        <div>
+          <h1 class="text-base font-black leading-tight">CONTROL RAMPA</h1>
+          <p class="text-xs text-blue-100">Cochera TRUPAL - Huachipa 2</p>
+        </div>
+      </div>
+      <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500 text-white animate-pulse">
+        <i class="fa-solid fa-signal mr-1.5 text-[10px]"></i> En Vivo
+      </span>
+    </div>
+  </header>
+
+  <!-- CONTENEDOR PRINCIPAL -->
+  <main class="max-w-md mx-auto px-4 pt-4">
+
+    <!-- PESTAÑAS -->
+    <div class="grid grid-cols-2 gap-2 p-1 bg-slate-200 rounded-xl mb-4 text-center font-bold text-sm">
+      <button id="tabFormBtn" onclick="cambiarPestana('form')" class="py-3 rounded-lg bg-white text-blue-700 shadow-sm flex items-center justify-center space-x-2">
+        <i class="fa-solid fa-pen-to-square"></i>
+        <span>1. Registrarse</span>
+      </button>
+      <button id="tabTurnosBtn" onclick="cambiarPestana('turnos')" class="py-3 rounded-lg text-slate-600 flex items-center justify-center space-x-2">
+        <i class="fa-solid fa-list-ol"></i>
+        <span>2. Ver Cola</span>
+      </button>
+    </div>
+
+    <!-- PESTAÑA 1: FORMULARIO ASISTIDO -->
+    <div id="vistaFormulario" class="space-y-4">
+
+      <!-- BANNER DE TURNO ACTIVO / SEGUNDA UNIDAD -->
+      <div id="bannerBloqueoSegundaUnidad" class="hidden bg-amber-50 border-2 border-amber-400 rounded-2xl p-4 text-amber-900 shadow-sm">
+        <div class="flex items-start space-x-3">
+          <i class="fa-solid fa-circle-exclamation text-2xl text-amber-600 mt-0.5"></i>
+          <div>
+            <h2 class="font-black text-sm uppercase">Ya tienes una unidad en proceso</h2>
+            <p class="text-xs text-amber-800 mt-1">Este dispositivo tiene registrada la placa <strong id="placaActivaText">---</strong>. Para registrar otra unidad debes solicitar permiso al Admin.</p>
+            <button onclick="solicitarSegundaUnidad()" id="btnSolicitar2da" class="mt-3 w-full bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-black py-2.5 px-4 rounded-xl text-xs uppercase shadow flex items-center justify-center space-x-2">
+              <i class="fa-solid fa-hand"></i>
+              <span>Solicitar permiso al Administrador</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PASO 1: GPS -->
+      <div class="bg-white border-2 border-slate-200 rounded-2xl p-4 shadow-sm" id="cardPasoGps">
+        <div class="flex items-center justify-between mb-2">
+          <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-blue-100 text-blue-700 font-black text-sm">1</span>
+          <span id="badgeGps" class="text-xs font-extrabold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">Pendiente</span>
+        </div>
+        
+        <h2 class="text-base font-black text-slate-900 mb-1">Confirma tu ubicación</h2>
+        <p class="text-xs text-slate-500 mb-3">Pulsa el botón para validar que estás cerca a Cochera Huachipa 2.</p>
+
+        <button id="btnGps" onclick="obtenerUbicacionGPS()" class="w-full bg-blue-600 active:bg-blue-800 text-white font-extrabold py-3.5 px-4 rounded-xl text-sm shadow flex items-center justify-center space-x-2 touch-target active:scale-95 transition-transform">
+          <i class="fa-solid fa-location-crosshairs text-lg"></i>
+          <span id="txtBtnGps">Comprobar mi ubicación actual</span>
+        </button>
+
+        <div id="resultadoGps" class="hidden mt-3 p-3 rounded-xl text-xs font-semibold"></div>
+      </div>
+
+      <!-- PASO 2: PLACA -->
+      <div class="bg-white border-2 border-slate-200 rounded-2xl p-4 shadow-sm opacity-50 pointer-events-none transition-all" id="cardPasoPlaca">
+        <div class="flex items-center justify-between mb-2">
+          <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-blue-100 text-blue-700 font-black text-sm">2</span>
+          <span id="badgePlaca" class="text-xs font-extrabold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">Por seleccionar</span>
+        </div>
+
+        <h2 class="text-base font-black text-slate-900 mb-1">Placa del camión</h2>
+        <p class="text-xs text-slate-500 mb-2">Escribe al menos 2 letras o números y selecciona tu placa:</p>
+
+        <div class="relative">
+          <input type="text" id="inputPlaca" oninput="filtrarPlacas(this.value)" placeholder="Ej: ABC-123" class="w-full uppercase font-black text-lg p-3.5 border-2 border-slate-300 rounded-xl focus:border-blue-600 focus:outline-none touch-target tracking-wider">
+          <button onclick="limpiarPlaca()" id="btnBorrarPlaca" class="hidden absolute right-3 top-3.5 text-slate-400 text-lg">
+            <i class="fa-solid fa-circle-xmark"></i>
+          </button>
+        </div>
+
+        <div id="sugerenciasPlaca" class="hidden mt-2 border-2 border-blue-200 rounded-xl bg-blue-50/70 divide-y divide-blue-100 max-h-44 overflow-y-auto"></div>
+
+        <!-- Ficha de la unidad autocompletada -->
+        <div id="fichaVehiculo" class="hidden mt-3 bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs space-y-2">
+          <div class="flex justify-between items-center pb-1 border-b border-slate-200">
+            <span class="text-slate-500 font-medium">Empresa:</span>
+            <strong id="txtEmpresa" class="text-slate-800 text-xs font-black">-</strong>
+          </div>
+          <div class="flex justify-between items-center pb-1 border-b border-slate-200">
+            <span class="text-slate-500 font-medium">Capacidad:</span>
+            <span id="txtCubicaje" class="font-black px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-xs">-</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-slate-500 font-medium">Servicio asignado:</span>
+            <span id="txtServicio" class="font-black px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded text-xs">-</span>
+          </div>
+
+          <div class="pt-2 mt-2 border-t border-slate-200">
+            <label class="flex items-center space-x-2 cursor-pointer bg-amber-50 p-2 rounded-lg border border-amber-200">
+              <input type="checkbox" id="checkExcepcion" onchange="alternarExcepcion(this.checked)" class="w-5 h-5 rounded text-amber-600 focus:ring-0">
+              <span class="text-[11px] font-bold text-amber-900 leading-tight">
+                ¿Realizarás servicio a PROVINCIA? (Requiere autorización previa de Admin)
+              </span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- PASO 3: CHOFER Y CONTACTO -->
+      <div class="bg-white border-2 border-slate-200 rounded-2xl p-4 shadow-sm opacity-50 pointer-events-none transition-all" id="cardPasoChofer">
+        <div class="flex items-center justify-between mb-2">
+          <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-blue-100 text-blue-700 font-black text-sm">3</span>
+          <span id="badgeChofer" class="text-xs font-extrabold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">Por completar</span>
+        </div>
+
+        <h2 class="text-base font-black text-slate-900 mb-1">Datos del Conductor</h2>
+        
+        <label class="block text-xs font-bold text-slate-600 mb-1">Brevete / Licencia:</label>
+        <input type="text" id="inputLicencia" oninput="filtrarLicencias(this.value)" placeholder="Ej: Q12345678" class="w-full uppercase font-bold text-base p-3 border-2 border-slate-300 rounded-xl focus:border-blue-600 focus:outline-none touch-target mb-2">
+        
+        <div id="sugerenciasLicencia" class="hidden mb-2 border-2 border-blue-200 rounded-xl bg-blue-50/70 divide-y divide-blue-100 max-h-40 overflow-y-auto"></div>
+
+        <div id="cajaNombreChofer" class="hidden mb-3 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+          <span class="text-[11px] text-slate-500 block font-medium">Conductor identificado:</span>
+          <p id="txtNombreChofer" class="text-xs font-black text-slate-800 uppercase">-</p>
+        </div>
+
+        <label class="block text-xs font-bold text-slate-600 mb-1">Teléfono celular de contacto:</label>
+        <div class="relative">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 font-bold text-sm">
+            🇵🇪 +51
+          </div>
+          <input type="tel" id="inputTelefono" maxlength="9" oninput="validarTelefonoInput(this)" placeholder="987654321" class="w-full pl-16 font-black text-base p-3 border-2 border-slate-300 rounded-xl focus:border-blue-600 focus:outline-none touch-target tracking-wider text-slate-900">
+        </div>
+        <p id="errorTelefono" class="text-[11px] text-red-600 font-bold mt-1 hidden">
+          <i class="fa-solid fa-triangle-exclamation"></i> Son 9 dígitos obligatorios y debe empezar con 9.
+        </p>
+      </div>
+
+      <!-- BOTÓN REGISTRAR TURNO -->
+      <button id="btnEnviarRegistro" disabled onclick="guardarRegistroTurno()" class="w-full bg-emerald-600 disabled:bg-slate-300 disabled:text-slate-400 text-white font-black py-4 px-6 rounded-2xl text-base shadow-lg active:scale-95 transition-transform uppercase tracking-wide flex items-center justify-center space-x-3 touch-target">
+        <i class="fa-solid fa-circle-check text-xl"></i>
+        <span>Tomar Turno de Llegada</span>
+      </button>
+
+      <!-- SIMULADOR GPS (Para pruebas desde PC) -->
+      <div class="p-3 bg-slate-200/70 rounded-xl text-center space-y-2">
+        <p class="text-[11px] font-bold text-slate-600 uppercase">Simulador de Ubicación (Modo Pruebas)</p>
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <button onclick="simularPosicion(200)" class="py-2 px-2 bg-white rounded-lg font-bold text-slate-700 shadow-sm border border-slate-300">
+            📍 Simular En Cochera (200m)
+          </button>
+          <button onclick="simularPosicion(2500)" class="py-2 px-2 bg-white rounded-lg font-bold text-slate-700 shadow-sm border border-slate-300">
+            🚗 Simular Lejos (2,500m)
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- PESTAÑA 2: VISOR DE COLA -->
+    <div id="vistaTurnos" class="hidden space-y-3">
+      
+      <!-- MI TURNO ACTIVO -->
+      <div id="cardMiTurno" class="hidden bg-gradient-to-r from-blue-700 to-indigo-800 text-white rounded-2xl p-4 shadow-lg">
+        <div class="flex justify-between items-start mb-2">
+          <span class="bg-white/20 text-white text-[11px] font-black uppercase px-2.5 py-1 rounded-full">
+            Tu Unidad en Registro
+          </span>
+          <span id="miEstadoBadge" class="bg-emerald-400 text-slate-900 text-xs font-black px-2.5 py-1 rounded-md uppercase">
+            En Espera
+          </span>
+        </div>
+        <div class="flex items-baseline justify-between mt-1">
+          <div>
+            <h3 id="miPlaca" class="text-2xl font-black tracking-wider">---</h3>
+            <p id="miCubicaje" class="text-xs text-blue-200 font-semibold">-</p>
+          </div>
+          <div class="text-right">
+            <span class="text-[10px] text-blue-200 block uppercase font-bold">Turno</span>
+            <span id="miPosicionCola" class="text-3xl font-black text-amber-300">#1</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-white/20">
+          <button onclick="pausarPorFalla()" class="bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-bold py-2 px-2 rounded-xl text-[11px] flex items-center justify-center space-x-1">
+            <i class="fa-solid fa-wrench"></i>
+            <span>Pausar por falla</span>
+          </button>
+          <button onclick="retirarVoluntario()" class="bg-red-500 hover:bg-red-600 active:scale-95 text-white font-bold py-2 px-2 rounded-xl text-[11px] flex items-center justify-center space-x-1">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            <span>Retirarme</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- COLA GENERAL -->
+      <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
+          <h3 class="font-black text-sm text-slate-800 uppercase flex items-center space-x-2">
+            <i class="fa-solid fa-truck text-blue-600"></i>
+            <span>Cola General en Espera</span>
+          </h3>
+          <span id="totalEnColaBadge" class="text-xs font-black bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full">
+            0 Unidades
+          </span>
+        </div>
+
+        <div id="listaColaGeneral" class="space-y-2.5 divide-y divide-slate-100 text-xs">
+          <p class="text-slate-400 py-4 text-center">Cargando cola en tiempo real...</p>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <script>
+    // Variables globales
+    let configGeocercas = { latCentroide: -12.0125, lngCentroide: -76.9230, radioLocal: 500, radioProv50: 900, radioProv80: 1500 };
+    let listaFlota = [];
+    let listaConductores = [];
+    let colaActiva = [];
+    
+    let estadoForm = {
+      gpsValido: false,
+      distanciaActual: 0,
+      vehiculo: null,
+      chofer: null,
+      telefonoValido: false,
+      pideExcepcion: false
+    };
+
+    let miRegistroLocal = JSON.parse(localStorage.getItem('turno_activo_trupal') || 'null');
+
+    window.onload = async function() {
+      await cargarConfiguracionYMaestros();
+      escucharColaEnVivo();
+      evaluarTurnoGuardado();
+    };
+
+    // 1. CARGA DE BASE DE DATOS FIRESTORE
+    async function cargarConfiguracionYMaestros() {
+      try {
+        // Cargar Geocercas
+        const docGeo = await db.collection('config').doc('geocercas').get();
+        if (docGeo.exists) {
+          configGeocercas = docGeo.data();
+        }
+
+        // Cargar Maestro Flota
+        const snapFlota = await db.collection('flota').get();
+        listaFlota = snapFlota.docs.map(d => d.data());
+
+        // Cargar Maestro Conductores
+        const snapChoferes = await db.collection('conductores').get();
+        listaConductores = snapChoferes.docs.map(d => d.data());
+      } catch (err) {
+        console.error("Error al cargar maestros:", err);
+      }
+    }
+
+    // 2. SINCRONIZACIÓN EN VIVO DE LA COLA
+    function escucharColaEnVivo() {
+      db.collection('registros_turnos')
+        .where('estado', 'in', ['DISPONIBLE', 'PENDIENTE_ADMIN', 'PAUSADO_MECANICO', 'ASIGNADO'])
+        .orderBy('fechaHoraRegistro', 'asc')
+        .onSnapshot((snap) => {
+          colaActiva = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          renderizarCola();
+          actualizarMiTurno();
+        }, (err) => {
+          console.error("Error al escuchar cola:", err);
+        });
+    }
+
+    // 3. NAVEGACIÓN
+    function cambiarPestana(p) {
+      const vForm = document.getElementById('vistaFormulario');
+      const vTurnos = document.getElementById('vistaTurnos');
+      const tFormBtn = document.getElementById('tabFormBtn');
+      const tTurnosBtn = document.getElementById('tabTurnosBtn');
+
+      if (p === 'form') {
+        vForm.classList.remove('hidden');
+        vTurnos.classList.add('hidden');
+        tFormBtn.className = "py-3 rounded-lg bg-white text-blue-700 shadow-sm flex items-center justify-center space-x-2";
+        tTurnosBtn.className = "py-3 rounded-lg text-slate-600 flex items-center justify-center space-x-2";
+      } else {
+        vForm.classList.add('hidden');
+        vTurnos.classList.remove('hidden');
+        tTurnosBtn.className = "py-3 rounded-lg bg-white text-blue-700 shadow-sm flex items-center justify-center space-x-2";
+        tFormBtn.className = "py-3 rounded-lg text-slate-600 flex items-center justify-center space-x-2";
+      }
+    }
+
+    // 4. GPS & HAVERSINE
+    function obtenerUbicacionGPS() {
+      const txtBtn = document.getElementById('txtBtnGps');
+      txtBtn.innerText = "Buscando satélites...";
+
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const dist = calcularHaversine(pos.coords.latitude, pos.coords.longitude, configGeocercas.latCentroide, configGeocercas.lngCentroide);
+            procesarDistancia(dist);
+          },
+          (err) => {
+            // Si el chofer deniega o falla en PC, se informa amigablemente
+            alert("No se pudo obtener el GPS automático. Puedes usar el simulador inferior para pruebas.");
+            txtBtn.innerText = "Comprobar mi ubicación actual";
+          },
+          { enableHighAccuracy: true, timeout: 8000 }
+        );
+      } else {
+        alert("Tu navegador no soporta geolocalización.");
+      }
+    }
+
+    function simularPosicion(distanciaMetros) {
+      procesarDistancia(distanciaMetros);
+    }
+
+    function calcularHaversine(lat1, lon1, lat2, lon2) {
+      const R = 6371e3;
+      const rad = Math.PI / 180;
+      const dLat = (lat2 - lat1) * rad;
+      const dLon = (lon2 - lon1) * rad;
+      const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin(dLon / 2) ** 2;
+      return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+    }
+
+    function procesarDistancia(dist) {
+      estadoForm.distanciaActual = dist;
+      const badge = document.getElementById('badgeGps');
+      const res = document.getElementById('resultadoGps');
+      const btn = document.getElementById('btnGps');
+      const cardPlaca = document.getElementById('cardPasoPlaca');
+
+      res.classList.remove('hidden');
+
+      // Verificación inicial contra radio más amplio (ej. 1500m)
+      if (dist <= 2000) {
+        estadoForm.gpsValido = true;
+        badge.innerText = "En Rango";
+        badge.className = "text-xs font-black px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800";
+        btn.className = "w-full bg-emerald-600 text-white font-extrabold py-3.5 px-4 rounded-xl text-sm shadow flex items-center justify-center space-x-2";
+        btn.innerHTML = `<i class="fa-solid fa-circle-check text-lg"></i><span>Ubicación Confirmada</span>`;
+        
+        res.className = "mt-3 p-3 rounded-xl text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200";
+        res.innerHTML = `Estás a <strong>${dist} metros</strong> de Huachipa 2. ¡Paso 1 aprobado!`;
+
+        cardPlaca.classList.remove('opacity-50', 'pointer-events-none');
+      } else {
+        estadoForm.gpsValido = false;
+        badge.innerText = "Fuera de Rango";
+        badge.className = "text-xs font-black px-2 py-0.5 rounded-md bg-red-100 text-red-800";
+        
+        res.className = "mt-3 p-3 rounded-xl text-xs font-semibold bg-red-50 text-red-800 border border-red-200";
+        res.innerHTML = `Estás a <strong>${dist} metros</strong>. Debes acercarte más a la cochera para continuar.`;
+      }
+      validarRadioDinamico();
+      comprobarFormulario();
+    }
+
+    // 5. AUTOCOMPLETADOS Y VALIDACIÓN
+    function filtrarPlacas(txt) {
+      const div = document.getElementById('sugerenciasPlaca');
+      const val = txt.trim().toUpperCase();
+      if (val.length < 2) { div.classList.add('hidden'); return; }
+
+      const filtro = listaFlota.filter(f => f.placa.includes(val));
+      if (filtro.length === 0) {
+        div.innerHTML = `<div class="p-3 text-xs text-slate-500 font-bold">Placa no registrada en flota. Consulta a Rampa.</div>`;
+      } else {
+        div.innerHTML = filtro.map(f => `
+          <div onclick="seleccionarPlaca('${f.placa}')" class="p-3 hover:bg-blue-100 cursor-pointer flex justify-between items-center active:bg-blue-200">
+            <div>
+              <span class="font-black text-sm text-blue-900">${f.placa}</span>
+              <span class="text-[11px] text-slate-500 block">${f.empresa}</span>
+            </div>
+            <span class="text-xs font-black px-2 py-0.5 rounded bg-blue-200 text-blue-800">${f.cubicaje}</span>
+          </div>
+        `).join('');
+      }
+      div.classList.remove('hidden');
+    }
+
+    function seleccionarPlaca(placa) {
+      const v = listaFlota.find(f => f.placa === placa);
+      if (!v) return;
+
+      estadoForm.vehiculo = v;
+      document.getElementById('inputPlaca').value = v.placa;
+      document.getElementById('inputPlaca').readOnly = true;
+      document.getElementById('btnBorrarPlaca').classList.remove('hidden');
+      document.getElementById('sugerenciasPlaca').classList.add('hidden');
+
+      document.getElementById('txtEmpresa').innerText = v.empresa;
+      document.getElementById('txtCubicaje').innerText = v.cubicaje;
+      document.getElementById('txtServicio').innerText = v.servicioDefault || 'LOCAL';
+      document.getElementById('fichaVehiculo').classList.remove('hidden');
+
+      document.getElementById('badgePlaca').innerText = "Listo";
+      document.getElementById('badgePlaca').className = "text-xs font-black px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800";
+
+      document.getElementById('cardPasoChofer').classList.remove('opacity-50', 'pointer-events-none');
+      validarRadioDinamico();
+      comprobarFormulario();
+    }
+
+    function limpiarPlaca() {
+      estadoForm.vehiculo = null;
+      document.getElementById('inputPlaca').value = '';
+      document.getElementById('inputPlaca').readOnly = false;
+      document.getElementById('btnBorrarPlaca').classList.add('hidden');
+      document.getElementById('fichaVehiculo').classList.add('hidden');
+      document.getElementById('badgePlaca').innerText = "Por seleccionar";
+      document.getElementById('badgePlaca').className = "text-xs font-extrabold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600";
+      comprobarFormulario();
+    }
+
+    function alternarExcepcion(chk) {
+      estadoForm.pideExcepcion = chk;
+      validarRadioDinamico();
+      comprobarFormulario();
+    }
+
+    function validarRadioDinamico() {
+      if (!estadoForm.vehiculo) return;
+      const v = estadoForm.vehiculo;
+      const serv = estadoForm.pideExcepcion ? 'PROVINCIA' : (v.servicioDefault || 'LOCAL');
+      
+      let radioMax = configGeocercas.radioLocal;
+
+      if (serv === 'PROVINCIA') {
+        if (v.cubicaje === '80 M3') radioMax = configGeocercas.radioProv80;
+        else if (v.cubicaje === '50 M3') radioMax = configGeocercas.radioProv50;
+        else {
+          alert("Las unidades de provincia con cubicaje distinto a 50 u 80 M3 requieren registro manual por Admin.");
+          estadoForm.gpsValido = false;
+          comprobarFormulario();
+          return;
+        }
+      }
+
+      if (estadoForm.distanciaActual > radioMax) {
+        const res = document.getElementById('resultadoGps');
+        res.className = "mt-3 p-3 rounded-xl text-xs font-semibold bg-amber-50 text-amber-900 border border-amber-300";
+        res.innerHTML = `Para esta unidad (${v.cubicaje} - ${serv}) el radio permitido es <strong>${radioMax}m</strong>. Estás a <strong>${estadoForm.distanciaActual}m</strong>.`;
+        estadoForm.gpsValido = false;
+      } else {
+        estadoForm.gpsValido = true;
+      }
+    }
+
+    function filtrarLicencias(txt) {
+      const div = document.getElementById('sugerenciasLicencia');
+      const val = txt.trim().toUpperCase();
+      if (val.length < 2) { div.classList.add('hidden'); return; }
+
+      const filtro = listaConductores.filter(c => c.licencia.includes(val));
+      if (filtro.length === 0) {
+        div.innerHTML = `<div class="p-3 text-xs text-slate-500 font-bold">Brevete no encontrado. Consulta a Control Rampa.</div>`;
+      } else {
+        div.innerHTML = filtro.map(c => `
+          <div onclick="seleccionarLicencia('${c.licencia}')" class="p-3 hover:bg-blue-100 cursor-pointer flex justify-between items-center active:bg-blue-200">
+            <div>
+              <span class="font-black text-sm text-blue-900">${c.licencia}</span>
+              <span class="text-[11px] text-slate-600 block">${c.nombre}</span>
+            </div>
+            <i class="fa-solid fa-check text-blue-600"></i>
+          </div>
+        `).join('');
+      }
+      div.classList.remove('hidden');
+    }
+
+    function seleccionarLicencia(lic) {
+      const c = listaConductores.find(item => item.licencia === lic);
+      if (!c) return;
+
+      estadoForm.chofer = c;
+      document.getElementById('inputLicencia').value = c.licencia;
+      document.getElementById('sugerenciasLicencia').classList.add('hidden');
+      document.getElementById('txtNombreChofer').innerText = c.nombre;
+      document.getElementById('cajaNombreChofer').classList.remove('hidden');
+
+      if (c.telefono && !document.getElementById('inputTelefono').value) {
+        document.getElementById('inputTelefono').value = c.telefono;
+        validarTelefonoInput(document.getElementById('inputTelefono'));
+      }
+      comprobarFormulario();
+    }
+
+    function validarTelefonoInput(inp) {
+      inp.value = inp.value.replace(/[^0-9]/g, '');
+      const err = document.getElementById('errorTelefono');
+      if (inp.value.length === 9 && inp.value.startsWith('9')) {
+        err.classList.add('hidden');
+        estadoForm.telefonoValido = true;
+      } else {
+        err.classList.remove('hidden');
+        estadoForm.telefonoValido = false;
+      }
+      comprobarFormulario();
+    }
+
+    function comprobarFormulario() {
+      const btn = document.getElementById('btnEnviarRegistro');
+      const ok = estadoForm.gpsValido && estadoForm.vehiculo && estadoForm.chofer && estadoForm.telefonoValido;
+      btn.disabled = !ok;
+    }
+
+    // 6. GUARDAR EN FIRESTORE
+    async function guardarRegistroTurno() {
+      const btn = document.getElementById('btnEnviarRegistro');
+      btn.disabled = true;
+      btn.innerText = "Guardando en cola...";
+
+      try {
+        const v = estadoForm.vehiculo;
+        const c = estadoForm.chofer;
+        const tel = document.getElementById('inputTelefono').value;
+        const serv = estadoForm.pideExcepcion ? 'PROVINCIA' : (v.servicioDefault || 'LOCAL');
+        const estadoFinal = estadoForm.pideExcepcion ? 'PENDIENTE_ADMIN' : 'DISPONIBLE';
+
+        const payload = {
+          placa: v.placa,
+          empresa: v.empresa,
+          cubicaje: v.cubicaje,
+          servicio: serv,
+          licencia: c.licencia,
+          conductor: c.nombre,
+          telefono: tel,
+          distanciaMetros: estadoForm.distanciaActual,
+          estado: estadoFinal,
+          asignadoA: null,
+          fechaHoraAsignado: null,
+          fechaHoraRegistro: firebase.firestore.FieldValue.serverTimestamp(),
+          bitacora_eventos: [{
+            fecha: new Date().toISOString(),
+            usuario: 'CONDUCTOR_APP',
+            tipo: 'REGISTRO_INICIAL',
+            motivo: estadoForm.pideExcepcion ? 'Solicita excepción a Provincia' : 'Llegada estándar'
+          }]
+        };
+
+        const docRef = await db.collection('registros_turnos').add(payload);
+        
+        miRegistroLocal = { id: docRef.id, placa: v.placa, cubicaje: v.cubicaje, servicio: serv };
+        localStorage.setItem('turno_activo_trupal', JSON.stringify(miRegistroLocal));
+
+        alert("¡Registro exitoso! Tu unidad ya está en cola.");
+        evaluarTurnoGuardado();
+        cambiarPestana('turnos');
+      } catch (err) {
+        alert("Error al registrar: " + err.message);
+        btn.disabled = false;
+        btn.innerText = "Tomar Turno de Llegada";
+      }
+    }
+
+    // 7. RENDERIZACIÓN DE COLA Y TURNOS
+    function renderizarCola() {
+      const cont = document.getElementById('listaColaGeneral');
+      const badge = document.getElementById('totalEnColaBadge');
+      badge.innerText = `${colaActiva.length} Unidades`;
+
+      if (colaActiva.length === 0) {
+        cont.innerHTML = `<p class="text-slate-400 py-4 text-center">No hay unidades en espera en este momento.</p>`;
+        return;
+      }
+
+      cont.innerHTML = colaActiva.map((t, idx) => `
+        <div class="pt-2.5 pb-1 flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <span class="w-7 h-7 rounded-full bg-slate-100 border border-slate-300 text-slate-700 font-black text-xs flex items-center justify-center">
+              #${idx + 1}
+            </span>
+            <div>
+              <div class="flex items-center space-x-2">
+                <span class="font-black text-slate-900 text-sm">${t.placa}</span>
+                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${t.servicio === 'PROVINCIA' ? 'bg-indigo-100 text-indigo-800' : 'bg-emerald-100 text-emerald-800'}">${t.servicio}</span>
+              </div>
+              <span class="text-[11px] text-slate-500 font-semibold">${t.cubicaje} • ${t.conductor || ''}</span>
+            </div>
+          </div>
+          <span class="text-[11px] font-black uppercase px-2 py-0.5 rounded ${t.estado === 'DISPONIBLE' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'}">
+            ${t.estado}
+          </span>
+        </div>
+      `).join('');
+    }
+
+    function evaluarTurnoGuardado() {
+      if (miRegistroLocal) {
+        document.getElementById('bannerBloqueoSegundaUnidad').classList.remove('hidden');
+        document.getElementById('placaActivaText').innerText = miRegistroLocal.placa;
+        actualizarMiTurno();
+      }
+    }
+
+    function actualizarMiTurno() {
+      if (!miRegistroLocal) return;
+      const card = document.getElementById('cardMiTurno');
+      const encontrado = colaActiva.find(t => t.id === miRegistroLocal.id || t.placa === miRegistroLocal.placa);
+
+      if (encontrado) {
+        card.classList.remove('hidden');
+        document.getElementById('miPlaca').innerText = encontrado.placa;
+        document.getElementById('miCubicaje').innerText = `${encontrado.cubicaje} • ${encontrado.servicio}`;
+        document.getElementById('miEstadoBadge').innerText = encontrado.estado;
+
+        const pos = colaActiva.findIndex(t => t.id === encontrado.id);
+        document.getElementById('miPosicionCola').innerText = pos !== -1 ? `#${pos + 1}` : '-';
+      }
+    }
+
+    async function solicitarSegundaUnidad() {
+      const btn = document.getElementById('btnSolicitar2da');
+      btn.disabled = true;
+      btn.innerText = "Enviando solicitud...";
+
+      try {
+        await db.collection('solicitudes_segunda_unidad').add({
+          placaActiva: miRegistroLocal ? miRegistroLocal.placa : 'DESCONOCIDA',
+          fechaHora: firebase.firestore.FieldValue.serverTimestamp(),
+          estado: 'PENDIENTE'
+        });
+        alert("Solicitud enviada al Administrador. Espera su autorización.");
+      } catch (e) {
+        alert("Error al enviar solicitud: " + e.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Solicitar permiso al Administrador";
+      }
+    }
+
+    async function pausarPorFalla() {
+      if (!miRegistroLocal) return;
+      if (confirm("¿Deseas pausar tu turno por desperfecto mecánico?")) {
+        await db.collection('registros_turnos').doc(miRegistroLocal.id).update({
+          estado: 'PAUSADO_MECANICO'
+        });
+        alert("Turno pausado. Avisa en rampa cuando soluciones el inconveniente.");
+      }
+    }
+
+    async function retirarVoluntario() {
+      if (!miRegistroLocal) return;
+      if (confirm("¿Estás seguro de retirarte de la cola de espera?")) {
+        await db.collection('registros_turnos').doc(miRegistroLocal.id).update({
+          estado: 'CANCELADO_VOLUNTARIO'
+        });
+        localStorage.removeItem('turno_activo_trupal');
+        miRegistroLocal = null;
+        document.getElementById('cardMiTurno').classList.add('hidden');
+        document.getElementById('bannerBloqueoSegundaUnidad').classList.add('hidden');
+        alert("Turno cancelado.");
+        cambiarPestana('form');
+      }
+    }
+  </script>
+</body>
+</html>
