@@ -59,156 +59,191 @@
     <!-- PESTAÑA 1: FORMULARIO ASISTIDO -->
     <div id="vistaFormulario" class="space-y-4">
 
-      <!-- BANNER DE TURNO ACTIVO / SEGUNDA UNIDAD -->
+      <!-- BANNER 1: YA TIENE 1 UNIDAD (SOLICITAR O ESPERAR AUTORIZACIÓN) -->
       <div id="bannerBloqueoSegundaUnidad" class="hidden bg-amber-50 border-2 border-amber-400 rounded-2xl p-4 text-amber-900 shadow-sm">
         <div class="flex items-start space-x-3">
           <i class="fa-solid fa-circle-exclamation text-2xl text-amber-600 mt-0.5"></i>
-          <div>
+          <div class="w-full">
             <h2 class="font-black text-sm uppercase">Ya tienes una unidad en proceso</h2>
             <p class="text-xs text-amber-800 mt-1">Este dispositivo tiene registrada la placa <strong id="placaActivaText">---</strong>. Para registrar otra unidad debes solicitar autorización.</p>
+            
             <button onclick="solicitarSegundaUnidad()" id="btnSolicitar2da" class="mt-3 w-full bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-black py-2.5 px-4 rounded-xl text-xs uppercase shadow flex items-center justify-center space-x-2">
               <i class="fa-solid fa-hand"></i>
               <span>Solicitar permiso al Administrador</span>
             </button>
+
+            <!-- AVISO DE ESPERA CUANDO YA FUE ENVIADA -->
+            <div id="cajaEsperandoAprobacion" class="hidden mt-3 p-3 bg-amber-100 rounded-xl text-xs font-bold text-amber-900 text-center flex items-center justify-center space-x-2">
+              <i class="fa-solid fa-spinner fa-spin text-sm"></i>
+              <span>Solicitud enviada. Esperando que el Admin apruebe...</span>
+            </div>
+
+            <!-- AVISO DE SEGUNDA UNIDAD AUTORIZADA -->
+            <div id="cajaAutorizadoSegunda" class="hidden mt-3 p-3 bg-emerald-100 rounded-xl text-xs font-black text-emerald-900 text-center flex items-center justify-center space-x-2">
+              <i class="fa-solid fa-circle-check text-emerald-600 text-base"></i>
+              <span>¡Autorizado! Puedes registrar tu 2da unidad.</span>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- ================= PASO 1: PLACA DEL CAMIÓN ================= -->
-      <div class="bg-white border-2 border-slate-200 rounded-2xl p-4 shadow-sm transition-all" id="cardPasoPlaca">
-        <div class="flex items-center justify-between mb-2">
-          <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-blue-100 text-blue-700 font-black text-sm">1</span>
-          <div class="flex items-center space-x-2">
-            <button id="btnVolverPlaca" onclick="desbloquearPasoPlaca()" class="hidden text-xs font-bold text-blue-700 underline">
-              <i class="fa-solid fa-rotate-left mr-1"></i>Cambiar camión
-            </button>
-            <span id="badgePlaca" class="text-xs font-extrabold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">Por seleccionar</span>
-          </div>
-        </div>
-
-        <h2 class="text-base font-black text-slate-900 mb-1">Placa del camión</h2>
-        <p class="text-xs text-slate-500 mb-2">Escribe al menos 2 letras o números y selecciona tu placa:</p>
-
-        <div class="relative">
-          <input type="text" id="inputPlaca" oninput="filtrarPlacas(this.value)" placeholder="EJ: ABC-123" class="w-full uppercase font-black text-lg p-3.5 border-2 border-slate-300 rounded-xl focus:border-blue-600 focus:outline-none touch-target tracking-wider">
-        </div>
-
-        <div id="sugerenciasPlaca" class="hidden mt-2 border-2 border-blue-200 rounded-xl bg-blue-50/70 divide-y divide-blue-100 max-h-44 overflow-y-auto"></div>
-
-        <!-- Ficha técnica autocompletada -->
-        <div id="fichaVehiculo" class="hidden mt-3 bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs space-y-2">
-          <div class="flex justify-between items-center pb-1 border-b border-slate-200">
-            <span class="text-slate-500 font-medium">Empresa:</span>
-            <strong id="txtEmpresa" class="text-slate-800 text-xs font-black">-</strong>
-          </div>
-          <div class="flex justify-between items-center pb-1 border-b border-slate-200">
-            <span class="text-slate-500 font-medium">Capacidad:</span>
-            <span id="txtCubicaje" class="font-black px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-xs">-</span>
-          </div>
-          <div class="flex justify-between items-center">
-            <span class="text-slate-500 font-medium">Servicio habitual:</span>
-            <span id="txtServicio" class="font-black px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded text-xs">-</span>
-          </div>
-
-          <div class="pt-2 mt-2 border-t border-slate-200">
-            <label class="flex items-center space-x-2 cursor-pointer bg-amber-50 p-2 rounded-lg border border-amber-200">
-              <input type="checkbox" id="checkExcepcion" onchange="alternarExcepcion(this.checked)" class="w-5 h-5 rounded text-amber-600 focus:ring-0">
-              <span id="txtLabelExcepcion" class="text-[11px] font-bold text-amber-900 leading-tight">
-                ¿Realizarás cambio de servicio con esta unidad? (Requiere autorización previa de Admin)
-              </span>
-            </label>
+      <!-- BANNER 2: LÍMITE MÁXIMO (2 UNIDADES ALCANZADAS) -->
+      <div id="bannerLimiteMaximo" class="hidden bg-red-50 border-2 border-red-400 rounded-2xl p-4 text-red-900 shadow-sm">
+        <div class="flex items-start space-x-3">
+          <i class="fa-solid fa-ban text-2xl text-red-600 mt-0.5"></i>
+          <div>
+            <h2 class="font-black text-sm uppercase">Límite de unidades alcanzado</h2>
+            <p class="text-xs text-red-800 mt-1">Ya tienes 2 unidades en proceso (<strong id="placasDosActivasText">---</strong>). No puedes registrar más unidades hasta que culminen su atención.</p>
           </div>
         </div>
       </div>
 
-      <!-- ================= PASO 2: DATOS DEL CONDUCTOR ================= -->
-      <div class="bg-white border-2 border-slate-200 rounded-2xl p-4 shadow-sm opacity-40 pointer-events-none transition-all" id="cardPasoChofer">
-        <div class="flex items-center justify-between mb-2">
-          <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-blue-100 text-blue-700 font-black text-sm">2</span>
-          <div class="flex items-center space-x-2">
-            <button id="btnVolverChofer" onclick="desbloquearPasoChofer()" class="hidden text-xs font-bold text-blue-700 underline">
-              <i class="fa-solid fa-rotate-left mr-1"></i>Cambiar chofer
-            </button>
-            <span id="badgeChofer" class="text-xs font-extrabold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">Por completar</span>
+      <!-- CONTENEDOR DEL FORMULARIO (Se deshabilita por completo si requiere autorización) -->
+      <div id="contenedorCamposFormulario" class="space-y-4 transition-all">
+
+        <!-- ================= PASO 1: PLACA DEL CAMIÓN ================= -->
+        <div class="bg-white border-2 border-slate-200 rounded-2xl p-4 shadow-sm transition-all" id="cardPasoPlaca">
+          <div class="flex items-center justify-between mb-2">
+            <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-blue-100 text-blue-700 font-black text-sm">1</span>
+            <div class="flex items-center space-x-2">
+              <button id="btnVolverPlaca" onclick="desbloquearPasoPlaca()" class="hidden text-xs font-bold text-blue-700 underline">
+                <i class="fa-solid fa-rotate-left mr-1"></i>Cambiar camión
+              </button>
+              <span id="badgePlaca" class="text-xs font-extrabold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">Por seleccionar</span>
+            </div>
+          </div>
+
+          <h2 class="text-base font-black text-slate-900 mb-1">Placa del camión</h2>
+          <p class="text-xs text-slate-500 mb-2">Escribe al menos 2 letras o números y selecciona tu placa:</p>
+
+          <div class="relative">
+            <input type="text" id="inputPlaca" oninput="filtrarPlacas(this.value)" placeholder="EJ: ABC-123" class="w-full uppercase font-black text-lg p-3.5 border-2 border-slate-300 rounded-xl focus:border-blue-600 focus:outline-none touch-target tracking-wider">
+          </div>
+
+          <!-- Alerta de placa duplicada -->
+          <div id="alertaPlacaDuplicada" class="hidden mt-2 p-3 bg-red-100 border border-red-300 rounded-xl text-xs font-bold text-red-800 flex items-center space-x-2">
+            <i class="fa-solid fa-triangle-exclamation text-base"></i>
+            <span id="txtAlertaPlacaDuplicada">Esta placa ya se encuentra registrada en proceso. Elige una placa distinta.</span>
+          </div>
+
+          <div id="sugerenciasPlaca" class="hidden mt-2 border-2 border-blue-200 rounded-xl bg-blue-50/70 divide-y divide-blue-100 max-h-44 overflow-y-auto"></div>
+
+          <!-- Ficha técnica autocompletada -->
+          <div id="fichaVehiculo" class="hidden mt-3 bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs space-y-2">
+            <div class="flex justify-between items-center pb-1 border-b border-slate-200">
+              <span class="text-slate-500 font-medium">Empresa:</span>
+              <strong id="txtEmpresa" class="text-slate-800 text-xs font-black">-</strong>
+            </div>
+            <div class="flex justify-between items-center pb-1 border-b border-slate-200">
+              <span class="text-slate-500 font-medium">Capacidad:</span>
+              <span id="txtCubicaje" class="font-black px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-xs">-</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-slate-500 font-medium">Servicio habitual:</span>
+              <span id="txtServicio" class="font-black px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded text-xs">-</span>
+            </div>
+
+            <div class="pt-2 mt-2 border-t border-slate-200">
+              <label class="flex items-center space-x-2 cursor-pointer bg-amber-50 p-2 rounded-lg border border-amber-200">
+                <input type="checkbox" id="checkExcepcion" onchange="alternarExcepcion(this.checked)" class="w-5 h-5 rounded text-amber-600 focus:ring-0">
+                <span id="txtLabelExcepcion" class="text-[11px] font-bold text-amber-900 leading-tight">
+                  ¿Realizarás cambio de servicio con esta unidad? (Requiere autorización previa de Admin)
+                </span>
+              </label>
+            </div>
           </div>
         </div>
 
-        <h2 class="text-base font-black text-slate-900 mb-1">Datos del Conductor</h2>
-        
-        <label class="block text-xs font-bold text-slate-600 mb-1">Brevete / Licencia:</label>
-        <input type="text" id="inputLicencia" oninput="filtrarLicencias(this.value)" placeholder="EJ: Q12345678" class="w-full uppercase font-bold text-base p-3 border-2 border-slate-300 rounded-xl focus:border-blue-600 focus:outline-none touch-target mb-2">
-        
-        <div id="sugerenciasLicencia" class="hidden mb-2 border-2 border-blue-200 rounded-xl bg-blue-50/70 divide-y divide-blue-100 max-h-40 overflow-y-auto"></div>
-
-        <div id="cajaNombreChofer" class="hidden mb-3 p-3 bg-slate-50 border border-slate-200 rounded-xl">
-          <span class="text-[11px] text-slate-500 block font-medium">Conductor identificado:</span>
-          <p id="txtNombreChofer" class="text-xs font-black text-slate-800 uppercase">-</p>
-        </div>
-
-        <label class="block text-xs font-bold text-slate-600 mb-1">Teléfono celular de contacto:</label>
-        <div class="relative">
-          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 font-bold text-sm">
-            🇵🇪 +51
+        <!-- ================= PASO 2: DATOS DEL CONDUCTOR ================= -->
+        <div class="bg-white border-2 border-slate-200 rounded-2xl p-4 shadow-sm opacity-40 pointer-events-none transition-all" id="cardPasoChofer">
+          <div class="flex items-center justify-between mb-2">
+            <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-blue-100 text-blue-700 font-black text-sm">2</span>
+            <div class="flex items-center space-x-2">
+              <button id="btnVolverChofer" onclick="desbloquearPasoChofer()" class="hidden text-xs font-bold text-blue-700 underline">
+                <i class="fa-solid fa-rotate-left mr-1"></i>Cambiar chofer
+              </button>
+              <span id="badgeChofer" class="text-xs font-extrabold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">Por completar</span>
+            </div>
           </div>
-          <input type="tel" id="inputTelefono" maxlength="9" oninput="validarTelefonoInput(this)" placeholder="987654321" class="w-full pl-16 font-black text-base p-3 border-2 border-slate-300 rounded-xl focus:border-blue-600 focus:outline-none touch-target tracking-wider text-slate-900">
-        </div>
-        <p id="errorTelefono" class="text-[11px] text-red-600 font-bold mt-1 hidden">
-          <i class="fa-solid fa-triangle-exclamation"></i> Son 9 dígitos obligatorios y debe empezar con 9.
-        </p>
 
-        <button id="btnConfirmarChofer" onclick="confirmarPasoChofer()" class="mt-3 w-full bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-extrabold py-3 px-4 rounded-xl text-sm shadow flex items-center justify-center space-x-2 transition-all">
-          <span>Siguiente: Validar Ubicación</span>
-          <i class="fa-solid fa-arrow-down"></i>
-        </button>
-      </div>
+          <h2 class="text-base font-black text-slate-900 mb-1">Datos del Conductor</h2>
+          
+          <label class="block text-xs font-bold text-slate-600 mb-1">Brevete / Licencia:</label>
+          <input type="text" id="inputLicencia" oninput="filtrarLicencias(this.value)" placeholder="EJ: Q12345678" class="w-full uppercase font-bold text-base p-3 border-2 border-slate-300 rounded-xl focus:border-blue-600 focus:outline-none touch-target mb-2">
+          
+          <div id="sugerenciasLicencia" class="hidden mb-2 border-2 border-blue-200 rounded-xl bg-blue-50/70 divide-y divide-blue-100 max-h-40 overflow-y-auto"></div>
 
-      <!-- ================= PASO 3: CONFIRMA TU UBICACIÓN ================= -->
-      <div class="bg-white border-2 border-slate-200 rounded-2xl p-4 shadow-sm opacity-40 pointer-events-none transition-all" id="cardPasoGps">
-        <div class="flex items-center justify-between mb-2">
-          <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-blue-100 text-blue-700 font-black text-sm">3</span>
-          <div class="flex items-center space-x-2">
-            <button id="btnVolverGps" onclick="desbloquearPasoGps()" class="hidden text-xs font-bold text-blue-700 underline">
-              <i class="fa-solid fa-rotate-left mr-1"></i>Reintentar GPS
-            </button>
-            <span id="badgeGps" class="text-xs font-extrabold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">Pendiente</span>
+          <div id="cajaNombreChofer" class="hidden mb-3 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+            <span class="text-[11px] text-slate-500 block font-medium">Conductor identificado:</span>
+            <p id="txtNombreChofer" class="text-xs font-black text-slate-800 uppercase">-</p>
           </div>
-        </div>
-        
-        <h2 class="text-base font-black text-slate-900 mb-1">Confirma tu ubicación</h2>
-        <p class="text-xs text-slate-500 mb-3">El sistema comprobará si estás dentro del rango permitido para tu unidad:</p>
 
-        <div id="cajaAccionGps">
-          <button id="btnGps" onclick="obtenerUbicacionGPS()" class="w-full bg-blue-600 active:bg-blue-800 text-white font-extrabold py-3.5 px-4 rounded-xl text-sm shadow flex items-center justify-center space-x-2 touch-target active:scale-95 transition-transform">
-            <i class="fa-solid fa-location-crosshairs text-lg"></i>
-            <span id="txtBtnGps">Comprobar mi ubicación actual</span>
+          <label class="block text-xs font-bold text-slate-600 mb-1">Teléfono celular de contacto:</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 font-bold text-sm">
+              🇵🇪 +51
+            </div>
+            <input type="tel" id="inputTelefono" maxlength="9" oninput="validarTelefonoInput(this)" placeholder="987654321" class="w-full pl-16 font-black text-base p-3 border-2 border-slate-300 rounded-xl focus:border-blue-600 focus:outline-none touch-target tracking-wider text-slate-900">
+          </div>
+          <p id="errorTelefono" class="text-[11px] text-red-600 font-bold mt-1 hidden">
+            <i class="fa-solid fa-triangle-exclamation"></i> Son 9 dígitos obligatorios y debe empezar con 9.
+          </p>
+
+          <button id="btnConfirmarChofer" onclick="confirmarPasoChofer()" class="mt-3 w-full bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-extrabold py-3 px-4 rounded-xl text-sm shadow flex items-center justify-center space-x-2 transition-all">
+            <span>Siguiente: Validar Ubicación</span>
+            <i class="fa-solid fa-arrow-down"></i>
           </button>
         </div>
-      </div>
 
-      <!-- BOTONES DE ACCIÓN: REGISTRAR Y LIMPIAR -->
-      <div class="grid grid-cols-2 gap-3 pt-2">
-        <button id="btnLimpiarForm" onclick="limpiarFormularioCompleto()" class="bg-slate-200 hover:bg-slate-300 active:scale-95 text-slate-700 font-black py-4 px-4 rounded-2xl text-sm shadow uppercase tracking-wide flex items-center justify-center space-x-2 touch-target">
-          <i class="fa-solid fa-trash-can text-base"></i>
-          <span>Limpiar</span>
-        </button>
+        <!-- ================= PASO 3: CONFIRMA TU UBICACIÓN ================= -->
+        <div class="bg-white border-2 border-slate-200 rounded-2xl p-4 shadow-sm opacity-40 pointer-events-none transition-all" id="cardPasoGps">
+          <div class="flex items-center justify-between mb-2">
+            <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-blue-100 text-blue-700 font-black text-sm">3</span>
+            <div class="flex items-center space-x-2">
+              <button id="btnVolverGps" onclick="desbloquearPasoGps()" class="hidden text-xs font-bold text-blue-700 underline">
+                <i class="fa-solid fa-rotate-left mr-1"></i>Reintentar GPS
+              </button>
+              <span id="badgeGps" class="text-xs font-extrabold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">Pendiente</span>
+            </div>
+          </div>
+          
+          <h2 class="text-base font-black text-slate-900 mb-1">Confirma tu ubicación</h2>
+          <p class="text-xs text-slate-500 mb-3">El sistema comprobará si estás dentro del rango permitido para tu unidad:</p>
 
-        <button id="btnEnviarRegistro" disabled onclick="guardarRegistroTurno()" class="bg-emerald-600 disabled:bg-slate-300 disabled:text-slate-400 text-white font-black py-4 px-4 rounded-2xl text-sm shadow-lg active:scale-95 transition-transform uppercase tracking-wide flex items-center justify-center space-x-2 touch-target">
-          <i class="fa-solid fa-circle-check text-lg"></i>
-          <span>Registrar</span>
-        </button>
-      </div>
+          <div id="cajaAccionGps">
+            <button id="btnGps" onclick="obtenerUbicacionGPS()" class="w-full bg-blue-600 active:bg-blue-800 text-white font-extrabold py-3.5 px-4 rounded-xl text-sm shadow flex items-center justify-center space-x-2 touch-target active:scale-95 transition-transform">
+              <i class="fa-solid fa-location-crosshairs text-lg"></i>
+              <span id="txtBtnGps">Comprobar mi ubicación actual</span>
+            </button>
+          </div>
+        </div>
 
-      <!-- BOTONES DE SIMULACIÓN PARA PRUEBAS -->
-      <div class="p-3 bg-slate-200/80 rounded-xl text-center space-y-2 mt-4">
-        <p class="text-[11px] font-bold text-slate-600 uppercase">Simulación manual de GPS (Para pruebas)</p>
-        <div class="grid grid-cols-2 gap-2 text-xs">
-          <button onclick="simularPosicion(250)" class="py-2.5 px-2 bg-white rounded-lg font-bold text-slate-700 shadow-sm border border-slate-300 active:bg-slate-50">
-            📍 Dentro de Huachipa (250m)
+        <!-- BOTONES DE ACCIÓN: REGISTRAR Y LIMPIAR -->
+        <div class="grid grid-cols-2 gap-3 pt-2">
+          <button id="btnLimpiarForm" onclick="limpiarFormularioCompleto()" class="bg-slate-200 hover:bg-slate-300 active:scale-95 text-slate-700 font-black py-4 px-4 rounded-2xl text-sm shadow uppercase tracking-wide flex items-center justify-center space-x-2 touch-target">
+            <i class="fa-solid fa-trash-can text-base"></i>
+            <span>Limpiar</span>
           </button>
-          <button onclick="simularPosicion(3000)" class="py-2.5 px-2 bg-white rounded-lg font-bold text-slate-700 shadow-sm border border-slate-300 active:bg-slate-50">
-            🚗 Lejos de Huachipa (3,000m)
+
+          <button id="btnEnviarRegistro" disabled onclick="guardarRegistroTurno()" class="bg-emerald-600 disabled:bg-slate-300 disabled:text-slate-400 text-white font-black py-4 px-4 rounded-2xl text-sm shadow-lg active:scale-95 transition-transform uppercase tracking-wide flex items-center justify-center space-x-2 touch-target">
+            <i class="fa-solid fa-circle-check text-lg"></i>
+            <span>Registrar</span>
           </button>
         </div>
+
+        <!-- BOTONES DE SIMULACIÓN PARA PRUEBAS -->
+        <div class="p-3 bg-slate-200/80 rounded-xl text-center space-y-2 mt-4">
+          <p class="text-[11px] font-bold text-slate-600 uppercase">Simulación manual de GPS (Para pruebas)</p>
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <button onclick="simularPosicion(250)" class="py-2.5 px-2 bg-white rounded-lg font-bold text-slate-700 shadow-sm border border-slate-300 active:bg-slate-50">
+              📍 Dentro de Huachipa (250m)
+            </button>
+            <button onclick="simularPosicion(3000)" class="py-2.5 px-2 bg-white rounded-lg font-bold text-slate-700 shadow-sm border border-slate-300 active:bg-slate-50">
+              🚗 Lejos de Huachipa (3,000m)
+            </button>
+          </div>
+        </div>
+
       </div>
 
     </div>
@@ -216,38 +251,8 @@
     <!-- PESTAÑA 2: VISOR DE COLA -->
     <div id="vistaTurnos" class="hidden space-y-3">
       
-      <!-- MI TURNO ACTIVO -->
-      <div id="cardMiTurno" class="hidden bg-gradient-to-r from-blue-700 to-indigo-800 text-white rounded-2xl p-4 shadow-lg">
-        <div class="flex justify-between items-start mb-2">
-          <span class="bg-white/20 text-white text-[11px] font-black uppercase px-2.5 py-1 rounded-full">
-            Tu Unidad en Registro
-          </span>
-          <span id="miEstadoBadge" class="bg-emerald-400 text-slate-900 text-xs font-black px-2.5 py-1 rounded-md uppercase">
-            En Espera
-          </span>
-        </div>
-        <div class="flex items-baseline justify-between mt-1">
-          <div>
-            <h3 id="miPlaca" class="text-2xl font-black tracking-wider">---</h3>
-            <p id="miCubicaje" class="text-xs text-blue-200 font-semibold">-</p>
-          </div>
-          <div class="text-right">
-            <span class="text-[10px] text-blue-200 block uppercase font-bold">Turno</span>
-            <span id="miPosicionCola" class="text-3xl font-black text-amber-300">#1</span>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-white/20">
-          <button onclick="pausarPorFalla()" class="bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-bold py-2 px-2 rounded-xl text-[11px] flex items-center justify-center space-x-1">
-            <i class="fa-solid fa-wrench"></i>
-            <span>Pausar por falla</span>
-          </button>
-          <button onclick="retirarVoluntario()" class="bg-red-500 hover:bg-red-600 active:scale-95 text-white font-bold py-2 px-2 rounded-xl text-[11px] flex items-center justify-center space-x-1">
-            <i class="fa-solid fa-arrow-right-from-bracket"></i>
-            <span>Retirarme</span>
-          </button>
-        </div>
-      </div>
+      <!-- CONTENEDOR DINÁMICO DE TARJETAS DE TURNO PROPIAS (Hasta 2) -->
+      <div id="contenedorMisTurnos" class="space-y-3"></div>
 
       <!-- COLA GENERAL -->
       <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
@@ -287,12 +292,16 @@
       radioExigido: 500
     };
 
-    let miRegistroLocal = JSON.parse(localStorage.getItem('turno_activo_trupal') || 'null');
+    // Arreglo local de turnos activos (máximo 2)
+    let misRegistrosLocales = JSON.parse(localStorage.getItem('mis_turnos_trupal_v2') || '[]');
+    let solicitudSegundaPendiente = localStorage.getItem('solicitud_2da_id') || null;
+    let segundaUnidadAutorizada = localStorage.getItem('segunda_autorizada') === 'true';
 
     window.onload = async function() {
       await cargarConfiguracionYMaestros();
       escucharColaEnVivo();
-      await evaluarTurnoGuardado();
+      await sincronizarMisTurnosActivos();
+      if (solicitudSegundaPendiente) escucharEstadoSolicitudSegunda();
     };
 
     // 1. CARGA FIRESTORE
@@ -311,17 +320,29 @@
       }
     }
 
-    // 2. ESCUCHA TIEMPO REAL
+    // 2. SINCRONIZACIÓN DE COLA EN VIVO (SIN BLOQUEO DE ÍNDICES FIRESTORE)
     function escucharColaEnVivo() {
+      // Obtenemos los registros y ordenamos directamente en JS para evitar problemas de índices compuestos
       db.collection('registros_turnos')
-        .where('estado', 'in', ['DISPONIBLE', 'PENDIENTE_ADMIN', 'PAUSADO_MECANICO', 'ASIGNADO'])
-        .orderBy('fechaHoraRegistro', 'asc')
         .onSnapshot((snap) => {
-          colaActiva = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          const todos = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          
+          const estadosValidos = ['DISPONIBLE', 'PENDIENTE_ADMIN', 'PAUSADO_MECANICO', 'ASIGNADO'];
+          
+          colaActiva = todos.filter(t => estadosValidos.includes(t.estado));
+
+          // Orden cronológico FIFO estricto
+          colaActiva.sort((a, b) => {
+            const timeA = a.fechaHoraRegistro ? (a.fechaHoraRegistro.toMillis ? a.fechaHoraRegistro.toMillis() : new Date(a.fechaHoraRegistro).getTime()) : 0;
+            const timeB = b.fechaHoraRegistro ? (b.fechaHoraRegistro.toMillis ? b.fechaHoraRegistro.toMillis() : new Date(b.fechaHoraRegistro).getTime()) : 0;
+            return timeA - timeB;
+          });
+
           renderizarCola();
-          actualizarMiTurno();
+          renderizarMisTurnos();
         }, (err) => {
           console.error("Error al escuchar cola:", err);
+          document.getElementById('listaColaGeneral').innerHTML = `<p class="text-red-500 py-3 text-center">Error al conectar con la cola: ${err.message}</p>`;
         });
     }
 
@@ -346,10 +367,140 @@
     }
 
     // ==========================================
-    // PASO 1: PLACA DEL CAMIÓN
+    // REGLA DE BLOQUEO DE FORMULARIO Y 2DA UNIDAD
+    // ==========================================
+    async function sincronizarMisTurnosActivos() {
+      const turnosValidos = [];
+
+      for (const t of misRegistrosLocales) {
+        try {
+          const docSnap = await db.collection('registros_turnos').doc(t.id).get();
+          if (docSnap.exists) {
+            const data = docSnap.data();
+            const estadosCerrados = ['DESPACHADO', 'CANCELADO_VOLUNTARIO', 'RECHAZADO_RAMPA', 'ANULADO'];
+            if (!estadosCerrados.includes(data.estado)) {
+              turnosValidos.push({ id: t.id, placa: data.placa, cubicaje: data.cubicaje, servicio: data.servicio, estado: data.estado });
+            }
+          }
+        } catch (e) {
+          console.error("Error validando turno individual:", e);
+        }
+      }
+
+      misRegistrosLocales = turnosValidos;
+      localStorage.setItem('mis_turnos_trupal_v2', JSON.stringify(misRegistrosLocales));
+
+      const formContainer = document.getElementById('contenedorCamposFormulario');
+      const bannerBloqueo1 = document.getElementById('bannerBloqueoSegundaUnidad');
+      const bannerLimite2 = document.getElementById('bannerLimiteMaximo');
+      const btnSolicitar = document.getElementById('btnSolicitar2da');
+      const cajaEsperando = document.getElementById('cajaEsperandoAprobacion');
+      const cajaAutorizado = document.getElementById('cajaAutorizadoSegunda');
+
+      // CASO 1: TIENE 2 UNIDADES (LÍMITE MÁXIMO)
+      if (misRegistrosLocales.length >= 2) {
+        bannerBloqueo1.classList.add('hidden');
+        bannerLimite2.classList.remove('hidden');
+        document.getElementById('placasDosActivasText').innerText = misRegistrosLocales.map(x => x.placa).join(' y ');
+        formContainer.classList.add('opacity-30', 'pointer-events-none');
+        return;
+      }
+
+      // CASO 2: TIENE 1 UNIDAD ACTIVA
+      if (misRegistrosLocales.length === 1) {
+        bannerLimite2.classList.add('hidden');
+        bannerBloqueo1.classList.remove('hidden');
+        document.getElementById('placaActivaText').innerText = misRegistrosLocales[0].placa;
+
+        if (segundaUnidadAutorizada) {
+          // Admin ya aprobó: se desbloquea el formulario para registrar la 2da unidad
+          btnSolicitar.classList.add('hidden');
+          cajaEsperando.classList.add('hidden');
+          cajaAutorizado.classList.remove('hidden');
+          formContainer.classList.remove('opacity-30', 'pointer-events-none');
+        } else if (solicitudSegundaPendiente) {
+          // Ya solicitó y está esperando
+          btnSolicitar.classList.add('hidden');
+          cajaEsperando.classList.remove('hidden');
+          cajaAutorizado.classList.add('hidden');
+          formContainer.classList.add('opacity-30', 'pointer-events-none');
+        } else {
+          // Aún no solicita: FORMULARIO BLOQUEADO
+          btnSolicitar.classList.remove('hidden');
+          cajaEsperando.classList.add('hidden');
+          cajaAutorizado.classList.add('hidden');
+          formContainer.classList.add('opacity-30', 'pointer-events-none');
+        }
+      } else {
+        // CASO 3: CERO UNIDADES ACTIVAS (ACCESO LIBRE)
+        bannerBloqueo1.classList.add('hidden');
+        bannerLimite2.classList.add('hidden');
+        formContainer.classList.remove('opacity-30', 'pointer-events-none');
+      }
+
+      renderizarMisTurnos();
+    }
+
+    async function solicitarSegundaUnidad() {
+      const btn = document.getElementById('btnSolicitar2da');
+      const cajaEsperando = document.getElementById('cajaEsperandoAprobacion');
+      btn.disabled = true;
+
+      try {
+        const placaActual = misRegistrosLocales.length > 0 ? misRegistrosLocales[0].placa : 'DESCONOCIDA';
+        const docRef = await db.collection('solicitudes_segunda_unidad').add({
+          placaActiva: placaActual,
+          fechaHora: firebase.firestore.FieldValue.serverTimestamp(),
+          estado: 'PENDIENTE'
+        });
+
+        solicitudSegundaPendiente = docRef.id;
+        localStorage.setItem('solicitud_2da_id', solicitudSegundaPendiente);
+
+        btn.classList.add('hidden');
+        cajaEsperando.classList.remove('hidden');
+        escucharEstadoSolicitudSegunda();
+        alert("Solicitud enviada al Administrador. El formulario permanecerá bloqueado hasta su aprobación.");
+      } catch (e) {
+        alert("Error al enviar solicitud: " + e.message);
+        btn.disabled = false;
+      }
+    }
+
+    function escucharEstadoSolicitudSegunda() {
+      if (!solicitudSegundaPendiente) return;
+
+      db.collection('solicitudes_segunda_unidad').doc(solicitudSegundaPendiente)
+        .onSnapshot((doc) => {
+          if (!doc.exists) return;
+          const data = doc.data();
+
+          if (data.estado === 'APROBADO') {
+            segundaUnidadAutorizada = true;
+            localStorage.setItem('segunda_autorizada', 'true');
+            localStorage.removeItem('solicitud_2da_id');
+            solicitudSegundaPendiente = null;
+            sincronizarMisTurnosActivos();
+            alert("¡Tu solicitud de 2da unidad ha sido APROBADA por el Administrador! Ya puedes completar el registro.");
+          } else if (data.estado === 'RECHAZADO') {
+            localStorage.removeItem('solicitud_2da_id');
+            solicitudSegundaPendiente = null;
+            segundaUnidadAutorizada = false;
+            localStorage.removeItem('segunda_autorizada');
+            sincronizarMisTurnosActivos();
+            alert("Tu solicitud de 2da unidad fue RECHAZADA por el Administrador.");
+          }
+        });
+    }
+
+    // ==========================================
+    // PASO 1: PLACA DEL CAMIÓN (CON CONTROL DE DUPLICIDAD)
     // ==========================================
     function filtrarPlacas(txt) {
       const div = document.getElementById('sugerenciasPlaca');
+      const alertaDup = document.getElementById('alertaPlacaDuplicada');
+      alertaDup.classList.add('hidden');
+
       const val = txt.trim().toUpperCase();
       if (val.length < 2) { div.classList.add('hidden'); return; }
 
@@ -371,6 +522,31 @@
     }
 
     function seleccionarPlaca(placa) {
+      const alertaDup = document.getElementById('alertaPlacaDuplicada');
+      const txtAlerta = document.getElementById('txtAlertaPlacaDuplicada');
+
+      // 1. VALIDACIÓN CONTRA MI PROPIA PRIMERA PLACA
+      const yaRegistradaPorMi = misRegistrosLocales.some(t => t.placa === placa);
+      if (yaRegistradaPorMi) {
+        txtAlerta.innerText = `La placa ${placa} ya la tienes registrada como tu primera unidad activa. Elige tu segunda placa distinta.`;
+        alertaDup.classList.remove('hidden');
+        document.getElementById('inputPlaca').value = '';
+        document.getElementById('sugerenciasPlaca').classList.add('hidden');
+        return;
+      }
+
+      // 2. VALIDACIÓN CONTRA TODAS LAS PLACAS EN COLA ACTIVA
+      const yaEnCola = colaActiva.some(t => t.placa === placa);
+      if (yaEnCola) {
+        txtAlerta.innerText = `La placa ${placa} ya se encuentra actualmente en espera en la cochera. No se permiten registros duplicados.`;
+        alertaDup.classList.remove('hidden');
+        document.getElementById('inputPlaca').value = '';
+        document.getElementById('sugerenciasPlaca').classList.add('hidden');
+        return;
+      }
+
+      alertaDup.classList.add('hidden');
+
       const v = listaFlota.find(f => f.placa === placa);
       if (!v) return;
 
@@ -406,7 +582,7 @@
 
       calcularRadioExigido();
 
-      // Bloquear Paso 1 y habilitar Paso 2
+      // Bloquear visualmente Paso 1 y habilitar Paso 2
       document.getElementById('cardPasoPlaca').classList.add('bg-slate-50', 'border-emerald-300');
       const cardChofer = document.getElementById('cardPasoChofer');
       cardChofer.classList.remove('opacity-40', 'pointer-events-none');
@@ -426,6 +602,7 @@
       cardPlaca.classList.remove('bg-slate-50', 'border-emerald-300');
       document.getElementById('fichaVehiculo').classList.add('hidden');
       document.getElementById('btnVolverPlaca').classList.add('hidden');
+      document.getElementById('alertaPlacaDuplicada').classList.add('hidden');
       document.getElementById('badgePlaca').innerText = "Por seleccionar";
       document.getElementById('badgePlaca').className = "text-xs font-extrabold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600";
 
@@ -506,7 +683,6 @@
       document.getElementById('txtNombreChofer').innerText = c.nombre;
       document.getElementById('cajaNombreChofer').classList.remove('hidden');
 
-      // Cargar último teléfono registrado o el que tenga guardado
       if (c.telefono) {
         document.getElementById('inputTelefono').value = c.telefono;
         validarTelefonoInput(document.getElementById('inputTelefono'));
@@ -627,7 +803,6 @@
 
       const radioMaximo = estadoForm.radioExigido;
 
-      // VALIDACIÓN CONDICIONANTE: Solo actualiza la etiqueta superior
       if (dist <= radioMaximo) {
         estadoForm.gpsValido = true;
         badge.innerText = "Aprobado";
@@ -672,15 +847,13 @@
       btn.disabled = !habilitado;
     }
 
-    // ==========================================
-    // LIMPIAR TODO EL FORMULARIO
-    // ==========================================
     function limpiarFormularioCompleto() {
       desbloquearPasoPlaca();
       document.getElementById('inputPlaca').value = '';
       document.getElementById('inputLicencia').value = '';
       document.getElementById('inputTelefono').value = '';
       document.getElementById('cajaNombreChofer').classList.add('hidden');
+      document.getElementById('alertaPlacaDuplicada').classList.add('hidden');
       estadoForm.chofer = null;
       estadoForm.telefonoValido = false;
       estadoForm.distanciaActual = 0;
@@ -702,7 +875,6 @@
         const servEfectivo = estadoForm.servicioEfectivo;
         const estadoFinal = estadoForm.pideExcepcion ? 'PENDIENTE_ADMIN' : 'DISPONIBLE';
 
-        // 1. Actualizar el teléfono en el maestro de choferes para que quede guardado el último
         if (c.telefono !== tel) {
           await db.collection('conductores').doc(c.licencia).set({
             telefono: tel
@@ -710,7 +882,6 @@
           c.telefono = tel;
         }
 
-        // 2. Registrar el turno
         const payload = {
           placa: v.placa,
           empresa: v.empresa,
@@ -736,15 +907,26 @@
 
         const docRef = await db.collection('registros_turnos').add(payload);
         
-        miRegistroLocal = { id: docRef.id, placa: v.placa, cubicaje: v.cubicaje, servicio: servEfectivo };
-        localStorage.setItem('turno_activo_trupal', JSON.stringify(miRegistroLocal));
+        // Agregar al arreglo de turnos del celular
+        misRegistrosLocales.push({
+          id: docRef.id,
+          placa: v.placa,
+          cubicaje: v.cubicaje,
+          servicio: servEfectivo,
+          estado: estadoFinal
+        });
+        localStorage.setItem('mis_turnos_trupal_v2', JSON.stringify(misRegistrosLocales));
+
+        // Consumir el permiso de segunda unidad si correspondía
+        if (segundaUnidadAutorizada) {
+          segundaUnidadAutorizada = false;
+          localStorage.removeItem('segunda_autorizada');
+        }
 
         alert("¡Registro exitoso! Tu unidad ya está en cola.");
 
-        // Limpiar formulario automáticamente
         limpiarFormularioCompleto();
-
-        await evaluarTurnoGuardado();
+        await sincronizarMisTurnosActivos();
         cambiarPestana('turnos');
       } catch (err) {
         alert("Error al registrar: " + err.message);
@@ -755,7 +937,7 @@
     }
 
     // ==========================================
-    // RENDERIZADO Y CONTROL DE TURNO
+    // RENDERIZADO DE COLA GENERAL Y MIS TURNOS
     // ==========================================
     function renderizarCola() {
       const cont = document.getElementById('listaColaGeneral');
@@ -788,96 +970,71 @@
       `).join('');
     }
 
-    async function evaluarTurnoGuardado() {
-      if (!miRegistroLocal) return;
+    function renderizarMisTurnos() {
+      const contenedor = document.getElementById('contenedorMisTurnos');
+      contenedor.innerHTML = '';
 
-      try {
-        const docSnap = await db.collection('registros_turnos').doc(miRegistroLocal.id).get();
+      if (misRegistrosLocales.length === 0) return;
 
-        if (!docSnap.exists) {
-          localStorage.removeItem('turno_activo_trupal');
-          miRegistroLocal = null;
-          document.getElementById('bannerBloqueoSegundaUnidad').classList.add('hidden');
-          document.getElementById('cardMiTurno').classList.add('hidden');
-          return;
-        }
+      misRegistrosLocales.forEach((reg, index) => {
+        const encontradoEnCola = colaActiva.find(t => t.id === reg.id || t.placa === reg.placa);
+        const estadoActual = encontradoEnCola ? encontradoEnCola.estado : reg.estado;
+        const posEnCola = encontradoEnCola ? `#${colaActiva.findIndex(t => t.id === encontradoEnCola.id) + 1}` : '-';
 
-        const dataTurno = docSnap.data();
-        const cerrados = ['DESPACHADO', 'CANCELADO_VOLUNTARIO', 'RECHAZADO_RAMPA', 'ANULADO'];
-
-        if (cerrados.includes(dataTurno.estado)) {
-          localStorage.removeItem('turno_activo_trupal');
-          miRegistroLocal = null;
-          document.getElementById('bannerBloqueoSegundaUnidad').classList.add('hidden');
-          document.getElementById('cardMiTurno').classList.add('hidden');
-        } else {
-          document.getElementById('bannerBloqueoSegundaUnidad').classList.remove('hidden');
-          document.getElementById('placaActivaText').innerText = miRegistroLocal.placa;
-          actualizarMiTurno();
-        }
-      } catch (err) {
-        console.error("Error al validar turno:", err);
-      }
+        const card = document.createElement('div');
+        card.className = "bg-gradient-to-r from-blue-700 to-indigo-800 text-white rounded-2xl p-4 shadow-lg";
+        card.innerHTML = `
+          <div class="flex justify-between items-start mb-2">
+            <span class="bg-white/20 text-white text-[11px] font-black uppercase px-2.5 py-1 rounded-full">
+              Tu Unidad #${index + 1}
+            </span>
+            <span class="bg-emerald-400 text-slate-900 text-xs font-black px-2.5 py-1 rounded-md uppercase">
+              ${estadoActual}
+            </span>
+          </div>
+          <div class="flex items-baseline justify-between mt-1">
+            <div>
+              <h3 class="text-2xl font-black tracking-wider">${reg.placa}</h3>
+              <p class="text-xs text-blue-200 font-semibold">${reg.cubicaje} • ${reg.servicio}</p>
+            </div>
+            <div class="text-right">
+              <span class="text-[10px] text-blue-200 block uppercase font-bold">Turno</span>
+              <span class="text-3xl font-black text-amber-300">${posEnCola}</span>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-white/20">
+            <button onclick="pausarPorFalla('${reg.id}')" class="bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-bold py-2 px-2 rounded-xl text-[11px] flex items-center justify-center space-x-1">
+              <i class="fa-solid fa-wrench"></i>
+              <span>Pausar falla</span>
+            </button>
+            <button onclick="retirarVoluntario('${reg.id}')" class="bg-red-500 hover:bg-red-600 active:scale-95 text-white font-bold py-2 px-2 rounded-xl text-[11px] flex items-center justify-center space-x-1">
+              <i class="fa-solid fa-arrow-right-from-bracket"></i>
+              <span>Retirarme</span>
+            </button>
+          </div>
+        `;
+        contenedor.appendChild(card);
+      });
     }
 
-    function actualizarMiTurno() {
-      if (!miRegistroLocal) return;
-      const card = document.getElementById('cardMiTurno');
-      const encontrado = colaActiva.find(t => t.id === miRegistroLocal.id || t.placa === miRegistroLocal.placa);
-
-      if (encontrado) {
-        card.classList.remove('hidden');
-        document.getElementById('miPlaca').innerText = encontrado.placa;
-        document.getElementById('miCubicaje').innerText = `${encontrado.cubicaje} • ${encontrado.servicio}`;
-        document.getElementById('miEstadoBadge').innerText = encontrado.estado;
-
-        const pos = colaActiva.findIndex(t => t.id === encontrado.id);
-        document.getElementById('miPosicionCola').innerText = pos !== -1 ? `#${pos + 1}` : '-';
-      }
-    }
-
-    async function solicitarSegundaUnidad() {
-      const btn = document.getElementById('btnSolicitar2da');
-      btn.disabled = true;
-      btn.innerText = "Enviando solicitud...";
-
-      try {
-        await db.collection('solicitudes_segunda_unidad').add({
-          placaActiva: miRegistroLocal ? miRegistroLocal.placa : 'DESCONOCIDA',
-          fechaHora: firebase.firestore.FieldValue.serverTimestamp(),
-          estado: 'PENDIENTE'
-        });
-        alert("Solicitud enviada al Administrador. Espera su autorización.");
-      } catch (e) {
-        alert("Error al enviar solicitud: " + e.message);
-      } finally {
-        btn.disabled = false;
-        btn.innerText = "Solicitar permiso al Administrador";
-      }
-    }
-
-    async function pausarPorFalla() {
-      if (!miRegistroLocal) return;
-      if (confirm("¿Deseas pausar tu turno por desperfecto mecánico?")) {
-        await db.collection('registros_turnos').doc(miRegistroLocal.id).update({
+    async function pausarPorFalla(idTurno) {
+      if (confirm("¿Deseas pausar esta unidad por desperfecto mecánico?")) {
+        await db.collection('registros_turnos').doc(idTurno).update({
           estado: 'PAUSADO_MECANICO'
         });
         alert("Turno pausado. Avisa en rampa cuando soluciones el inconveniente.");
       }
     }
 
-    async function retirarVoluntario() {
-      if (!miRegistroLocal) return;
-      if (confirm("¿Estás seguro de retirarte de la cola de espera?")) {
-        await db.collection('registros_turnos').doc(miRegistroLocal.id).update({
+    async function retirarVoluntario(idTurno) {
+      if (confirm("¿Estás seguro de retirar esta unidad de la cola de espera?")) {
+        await db.collection('registros_turnos').doc(idTurno).update({
           estado: 'CANCELADO_VOLUNTARIO'
         });
-        localStorage.removeItem('turno_activo_trupal');
-        miRegistroLocal = null;
-        document.getElementById('cardMiTurno').classList.add('hidden');
-        document.getElementById('bannerBloqueoSegundaUnidad').classList.add('hidden');
-        alert("Turno cancelado.");
-        cambiarPestana('form');
+        misRegistrosLocales = misRegistrosLocales.filter(t => t.id !== idTurno);
+        localStorage.setItem('mis_turnos_trupal_v2', JSON.stringify(misRegistrosLocales));
+        alert("Unidad retirada de la cola.");
+        await sincronizarMisTurnosActivos();
       }
     }
   </script>
