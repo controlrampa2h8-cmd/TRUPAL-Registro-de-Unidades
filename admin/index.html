@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Administrador - Control Rampa TRUPAL</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  
+  <!-- Firebase Compat Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  
+  <script src="../shared/firebase-init.js"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased min-h-screen">
+
+  <!-- CABECERA ADMIN -->
+  <header class="bg-slate-900 text-white p-4 shadow-lg sticky top-0 z-40 border-b border-slate-700">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-3">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 bg-amber-500 text-slate-950 font-black rounded-xl flex items-center justify-center text-lg shadow">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <div>
+          <h1 class="text-lg font-black tracking-wide leading-tight">PANEL ADMINISTRADOR</h1>
+          <p class="text-xs text-slate-400">Control Rampa • TRUPAL Huachipa 2</p>
+        </div>
+      </div>
+
+      <!-- ACCESOS RÁPIDOS A OTROS PANELES -->
+      <div class="flex flex-wrap gap-2 text-xs font-bold">
+        <a href="../conductor/" target="_blank" class="bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-lg flex items-center space-x-1.5 shadow">
+          <i class="fa-solid fa-mobile-screen"></i>
+          <span>Abrir Conductor</span>
+        </a>
+        <button onclick="cargarTodo()" class="bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-lg flex items-center space-x-1.5">
+          <i class="fa-solid fa-rotate"></i>
+          <span>Refrescar</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTENEDOR PRINCIPAL -->
+  <main class="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
+
+    <!-- FILA SUPERIOR: BANDEJAS DE APROBACIÓN URGENTE -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+      <!-- BANDEJA 1: SOLICITUDES DE SEGUNDA UNIDAD -->
+      <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+          <h2 class="font-black text-sm text-slate-800 uppercase flex items-center space-x-2">
+            <i class="fa-solid fa-mobile-screen-button text-amber-500 text-base"></i>
+            <span>Solicitudes 2da Unidad (Dispositivos)</span>
+          </h2>
+          <span id="badgeContador2da" class="text-xs font-black px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800">
+            0 Pendientes
+          </span>
+        </div>
+
+        <div id="listaSolicitudes2da" class="space-y-3 flex-1 overflow-y-auto max-h-60 text-xs">
+          <p class="text-slate-400 text-center py-6">Sin solicitudes pendientes.</p>
+        </div>
+      </div>
+
+      <!-- BANDEJA 2: EXCEPCIONES DE SERVICIO (CAMBIO A PROVINCIA/LOCAL) -->
+      <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+          <h2 class="font-black text-sm text-slate-800 uppercase flex items-center space-x-2">
+            <i class="fa-solid fa-route text-indigo-500 text-base"></i>
+            <span>Excepciones de Servicio (Pendiente Admin)</span>
+          </h2>
+          <span id="badgeContadorExcepciones" class="text-xs font-black px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800">
+            0 Pendientes
+          </span>
+        </div>
+
+        <div id="listaExcepcionesServicio" class="space-y-3 flex-1 overflow-y-auto max-h-60 text-xs">
+          <p class="text-slate-400 text-center py-6">Sin excepciones pendientes.</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- FILA MEDIA: CONFIGURADOR DE GEOCERCAS EN TIEMPO REAL -->
+    <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+        <div>
+          <h2 class="font-black text-sm text-slate-800 uppercase flex items-center space-x-2">
+            <i class="fa-solid fa-location-dot text-emerald-600 text-base"></i>
+            <span>Parámetros de Geocerca (Huachipa 2)</span>
+          </h2>
+          <p class="text-xs text-slate-500 mt-0.5">Los cambios se aplican de inmediato en los teléfonos de los choferes.</p>
+        </div>
+        <button onclick="guardarGeocercas()" id="btnGuardarGeo" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-black text-xs uppercase px-4 py-2.5 rounded-xl shadow flex items-center space-x-1.5 transition-all">
+          <i class="fa-solid fa-floppy-disk"></i>
+          <span>Guardar Radios</span>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-3 text-xs">
+        <div>
+          <label class="block font-bold text-slate-600 mb-1">Latitud Centroide:</label>
+          <input type="number" step="any" id="inpLat" class="w-full font-black p-2.5 border-2 border-slate-300 rounded-xl focus:border-blue-600 focus:outline-none">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-600 mb-1">Longitud Centroide:</label>
+          <input type="number" step="any" id="inpLng" class="w-full font-black p-2.5 border-2 border-slate-300 rounded-xl focus:border-blue-600 focus:outline-none">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-600 mb-1">Radio Local (m):</label>
+          <input type="number" id="inpRadioLocal" class="w-full font-black p-2.5 border-2 border-slate-300 rounded-xl focus:border-blue-600 focus:outline-none">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-600 mb-1">Radio Prov 50 M3 (m):</label>
+          <input type="number" id="inpRadioProv50" class="w-full font-black p-2.5 border-2 border-slate-300 rounded-xl focus:border-blue-600 focus:outline-none">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-600 mb-1">Radio Prov 80 M3 (m):</label>
+          <input type="number" id="inpRadioProv80" class="w-full font-black p-2.5 border-2 border-slate-300 rounded-xl focus:border-blue-600 focus:outline-none">
+        </div>
+      </div>
+    </div>
+
+    <!-- FILA INFERIOR: TABLERO GENERAL DE TURNOS Y GESTIÓN -->
+    <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+      <div class="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-slate-100 gap-3 mb-4">
+        <div>
+          <h2 class="font-black text-sm text-slate-800 uppercase flex items-center space-x-2">
+            <i class="fa-solid fa-list-check text-blue-600 text-base"></i>
+            <span>Control Maestro de Unidades en Patio</span>
+          </h2>
+          <p class="text-xs text-slate-500 mt-0.5">Monitoreo en vivo y resolución manual de estados.</p>
+        </div>
+        <span id="badgeTotalUnidades" class="text-xs font-black bg-blue-50 text-blue-700 px-3 py-1 rounded-full w-fit">
+          0 Unidades Activas
+        </span>
+      </div>
+
+      <!-- TABLA GENERAL -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-50 text-slate-600 uppercase font-black border-y border-slate-200">
+            <tr>
+              <th class="p-3">Turno</th>
+              <th class="p-3">Placa / Empresa</th>
+              <th class="p-3">Cubicaje</th>
+              <th class="p-3">Servicio</th>
+              <th class="p-3">Conductor / Celular</th>
+              <th class="p-3">Distancia</th>
+              <th class="p-3">Estado</th>
+              <th class="p-3 text-right">Acciones Admin</th>
+            </tr>
+          </thead>
+          <tbody id="tablaCuerpoTurnos" class="divide-y divide-slate-100">
+            <tr>
+              <td colspan="8" class="text-center py-6 text-slate-400 font-semibold">Cargando unidades...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    let solicitudesSegunda = [];
+    let turnosActivos = [];
+
+    window.onload = function() {
+      cargarGeocercas();
+      escucharSolicitudesSegunda();
+      escucharTurnosMaestros();
+    };
+
+    function cargarTodo() {
+      cargarGeocercas();
+    }
+
+    // 1. CARGAR Y GUARDAR GEOCERCAS
+    async function cargarGeocercas() {
+      try {
+        const doc = await db.collection('config').doc('geocercas').get();
+        if (doc.exists) {
+          const d = doc.data();
+          document.getElementById('inpLat').value = d.latCentroide ?? -12.0125;
+          document.getElementById('inpLng').value = d.lngCentroide ?? -76.9230;
+          document.getElementById('inpRadioLocal').value = d.radioLocal ?? 500;
+          document.getElementById('inpRadioProv50').value = d.radioProv50 ?? 900;
+          document.getElementById('inpRadioProv80').value = d.radioProv80 ?? 1500;
+        }
+      } catch (e) {
+        console.error("Error al cargar geocercas:", e);
+      }
+    }
+
+    async function guardarGeocercas() {
+      const btn = document.getElementById('btnGuardarGeo');
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i><span>Guardando...</span>`;
+
+      try {
+        await db.collection('config').doc('geocercas').set({
+          latCentroide: Number(document.getElementById('inpLat').value),
+          lngCentroide: Number(document.getElementById('inpLng').value),
+          radioLocal: Number(document.getElementById('inpRadioLocal').value),
+          radioProv50: Number(document.getElementById('inpRadioProv50').value),
+          radioProv80: Number(document.getElementById('inpRadioProv80').value)
+        }, { merge: true });
+
+        alert("¡Radios de geocerca actualizados con éxito!");
+      } catch (e) {
+        alert("Error al guardar: " + e.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-floppy-disk"></i><span>Guardar Radios</span>`;
+      }
+    }
+
+    // 2. ESCUCHAR SOLICITUDES DE 2DA UNIDAD
+    function escucharSolicitudesSegunda() {
+      db.collection('solicitudes_segunda_unidad')
+        .onSnapshot((snap) => {
+          const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          solicitudesSegunda = docs.filter(s => s.estado === 'PENDIENTE');
+
+          document.getElementById('badgeContador2da').innerText = `${solicitudesSegunda.length} Pendientes`;
+          renderizarSolicitudes2da();
+        });
+    }
+
+    function renderizarSolicitudes2da() {
+      const cont = document.getElementById('listaSolicitudes2da');
+
+      if (solicitudesSegunda.length === 0) {
+        cont.innerHTML = `<p class="text-slate-400 text-center py-6">Sin solicitudes de 2da unidad pendientes.</p>`;
+        return;
+      }
+
+      cont.innerHTML = solicitudesSegunda.map(s => `
+        <div class="p-3 bg-amber-50/80 border border-amber-200 rounded-xl flex items-center justify-between gap-2">
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="font-black text-amber-900 text-sm">Placa Activa: ${s.placaActiva || '---'}</span>
+              <span class="text-[10px] bg-amber-200 text-amber-800 font-bold px-1.5 py-0.5 rounded">Pide 2da</span>
+            </div>
+            <p class="text-[11px] text-slate-500 mt-0.5">El chofer solicita desbloqueo para registrar un segundo camión.</p>
+          </div>
+          <div class="flex items-center space-x-1.5 shrink-0">
+            <button onclick="responderSegundaUnidad('${s.id}', true)" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold py-1.5 px-3 rounded-lg text-xs shadow">
+              <i class="fa-solid fa-check mr-1"></i>Aprobar
+            </button>
+            <button onclick="responderSegundaUnidad('${s.id}', false)" class="bg-red-500 hover:bg-red-600 active:scale-95 text-white font-bold py-1.5 px-3 rounded-lg text-xs">
+              <i class="fa-solid fa-xmark mr-1"></i>Rechazar
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function responderSegundaUnidad(idSolicitud, aprobado) {
+      try {
+        await db.collection('solicitudes_segunda_unidad').doc(idSolicitud).update({
+          estado: aprobado ? 'APROBADO' : 'RECHAZADO',
+          fechaRespuesta: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      } catch (e) {
+        alert("Error al procesar: " + e.message);
+      }
+    }
+
+    // 3. ESCUCHAR TABLERO MAESTRO Y EXCEPCIONES
+    function escucharTurnosMaestros() {
+      db.collection('registros_turnos')
+        .onSnapshot((snap) => {
+          const todos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+          // Orden cronológico FIFO
+          todos.sort((a, b) => {
+            const tA = a.fechaHoraRegistro ? (a.fechaHoraRegistro.toMillis ? a.fechaHoraRegistro.toMillis() : new Date(a.fechaHoraRegistro).getTime()) : 0;
+            const tB = b.fechaHoraRegistro ? (b.fechaHoraRegistro.toMillis ? b.fechaHoraRegistro.toMillis() : new Date(b.fechaHoraRegistro).getTime()) : 0;
+            return tA - tB;
+          });
+
+          turnosActivos = todos.filter(t => !['DESPACHADO', 'CANCELADO_VOLUNTARIO', 'ANULADO'].includes(t.estado));
+
+          document.getElementById('badgeTotalUnidades').innerText = `${turnosActivos.length} Unidades Activas`;
+
+          renderizarExcepciones();
+          renderizarTablaMaestra();
+        });
+    }
+
+    function renderizarExcepciones() {
+      const cont = document.getElementById('listaExcepcionesServicio');
+      const pendientes = turnosActivos.filter(t => t.estado === 'PENDIENTE_ADMIN');
+
+      document.getElementById('badgeContadorExcepciones').innerText = `${pendientes.length} Pendientes`;
+
+      if (pendientes.length === 0) {
+        cont.innerHTML = `<p class="text-slate-400 text-center py-6">Sin excepciones de servicio pendientes.</p>`;
+        return;
+      }
+
+      cont.innerHTML = pendientes.map(p => `
+        <div class="p-3 bg-indigo-50/80 border border-indigo-200 rounded-xl flex items-center justify-between gap-2">
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="font-black text-indigo-950 text-sm">${p.placa}</span>
+              <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-200 text-indigo-800">Pide: ${p.servicio}</span>
+            </div>
+            <p class="text-[11px] text-slate-500 mt-0.5">${p.cubicaje} • ${p.conductor || 'Chofer'} (${p.telefono})</p>
+          </div>
+          <div class="flex items-center space-x-1.5 shrink-0">
+            <button onclick="responderExcepcion('${p.id}', true)" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold py-1.5 px-3 rounded-lg text-xs shadow">
+              <i class="fa-solid fa-check mr-1"></i>Aprobar
+            </button>
+            <button onclick="responderExcepcion('${p.id}', false)" class="bg-red-500 hover:bg-red-600 active:scale-95 text-white font-bold py-1.5 px-3 rounded-lg text-xs">
+              <i class="fa-solid fa-xmark mr-1"></i>Rechazar
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function responderExcepcion(idTurno, aprobado) {
+      try {
+        if (aprobado) {
+          await db.collection('registros_turnos').doc(idTurno).update({
+            estado: 'DISPONIBLE'
+          });
+        } else {
+          await db.collection('registros_turnos').doc(idTurno).update({
+            estado: 'ANULADO'
+          });
+        }
+      } catch (e) {
+        alert("Error al procesar: " + e.message);
+      }
+    }
+
+    function renderizarTablaMaestra() {
+      const cuerpo = document.getElementById('tablaCuerpoTurnos');
+
+      if (turnosActivos.length === 0) {
+        cuerpo.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-slate-400 font-semibold">No hay unidades en patio actualmente.</td></tr>`;
+        return;
+      }
+
+      cuerpo.innerHTML = turnosActivos.map((t, idx) => `
+        <tr class="hover:bg-slate-50">
+          <td class="p-3 font-black text-slate-700">#${idx + 1}</td>
+          <td class="p-3">
+            <span class="font-black text-slate-900 block">${t.placa}</span>
+            <span class="text-[10px] text-slate-500">${t.empresa || '-'}</span>
+          </td>
+          <td class="p-3 font-bold">${t.cubicaje || '-'}</td>
+          <td class="p-3">
+            <span class="font-bold px-2 py-0.5 rounded text-[10px] ${t.servicio === 'PROVINCIA' ? 'bg-indigo-100 text-indigo-800' : 'bg-emerald-100 text-emerald-800'}">
+              ${t.servicio}
+            </span>
+          </td>
+          <td class="p-3">
+            <span class="font-bold text-slate-800 block">${t.conductor || '-'}</span>
+            <span class="text-slate-500 text-[11px]">${t.telefono || '-'}</span>
+          </td>
+          <td class="p-3 font-semibold text-slate-600">${t.distanciaMetros ? t.distanciaMetros + ' m' : '-'}</td>
+          <td class="p-3">
+            <span class="font-black text-[10px] px-2 py-0.5 rounded uppercase ${
+              t.estado === 'DISPONIBLE' ? 'bg-emerald-100 text-emerald-800' :
+              t.estado === 'PENDIENTE_ADMIN' ? 'bg-indigo-100 text-indigo-800' :
+              t.estado === 'ASIGNADO' ? 'bg-blue-100 text-blue-800' :
+              t.estado === 'PAUSADO_MECANICO' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-800'
+            }">
+              ${t.estado}
+            </span>
+          </td>
+          <td class="p-3 text-right space-x-1 whitespace-nowrap">
+            <button onclick="forzarDisponible('${t.id}')" title="Forzar a Disponible" class="p-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg">
+              <i class="fa-solid fa-rotate-left"></i>
+            </button>
+            <button onclick="anularRegistroAdmin('${t.id}')" title="Anular turno" class="p-1.5 bg-red-50 text-red-700 hover:bg-red-100 rounded-lg">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    async function forzarDisponible(id) {
+      if (confirm("¿Deseas restablecer el estado de esta unidad a DISPONIBLE?")) {
+        await db.collection('registros_turnos').doc(id).update({ estado: 'DISPONIBLE', asignadoA: null });
+      }
+    }
+
+    async function anularRegistroAdmin(id) {
+      if (confirm("¿Estás seguro de anular este registro?")) {
+        await db.collection('registros_turnos').doc(id).update({ estado: 'ANULADO' });
+      }
+    }
+  </script>
+</body>
+</html>
