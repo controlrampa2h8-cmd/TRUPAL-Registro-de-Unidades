@@ -148,7 +148,7 @@
         </span>
       </div>
 
-      <!-- BARRA DE FILTROS CRUZADOS (PLACA/EMPRESA, CUBICAJE, SERVICIO, ESTADO) -->
+      <!-- BARRA DE FILTROS CRUZADOS -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs">
         <div>
           <label class="block font-bold text-slate-600 mb-1">Buscar Placa / Empresa:</label>
@@ -208,15 +208,13 @@
               <th class="p-3">Fecha y Hora</th>
               <th class="p-3">Placa / Empresa</th>
               <th class="p-3">Cubicaje</th>
-              <th class="p-3">Servicio</th>
               <th class="p-3">Conductor / Celular</th>
-              <th class="p-3">Distancia</th>
               <th class="p-3 text-right">Acciones Admin</th>
             </tr>
           </thead>
           <tbody id="tablaCuerpoTurnos" class="divide-y divide-slate-100">
             <tr>
-              <td colspan="8" class="text-center py-6 text-slate-400 font-semibold">Cargando unidades...</td>
+              <td colspan="6" class="text-center py-6 text-slate-400 font-semibold">Cargando unidades...</td>
             </tr>
           </tbody>
         </table>
@@ -551,7 +549,7 @@
     }
 
     // ==========================================
-    // 4. TABLERO MAESTRO Y RENDERIZACIÓN CON FILTROS
+    // 4. TABLERO MAESTRO Y RENDERIZACIÓN
     // ==========================================
     function escucharTurnosMaestros() {
       db.collection('registros_turnos')
@@ -630,22 +628,15 @@
       const filtroServicio = document.getElementById('filtroServicio')?.value || 'TODOS';
       const filtroEstado = document.getElementById('filtroEstado')?.value || 'TODOS';
 
-      // Filtrado multidimensional
       let filtrados = todosLosTurnos.filter(t => {
-        // Filtro texto (Placa o Empresa)
         if (filtroTexto) {
           const placa = (t.placa || '').toUpperCase();
           const empresa = (t.empresa || '').toUpperCase();
           if (!placa.includes(filtroTexto) && !empresa.includes(filtroTexto)) return false;
         }
 
-        // Filtro cubicaje
         if (filtroCubicaje !== 'TODOS' && t.cubicaje !== filtroCubicaje) return false;
-
-        // Filtro servicio
         if (filtroServicio !== 'TODOS' && t.servicio !== filtroServicio) return false;
-
-        // Filtro estado
         if (filtroEstado !== 'TODOS' && t.estado !== filtroEstado) return false;
 
         return true;
@@ -654,12 +645,11 @@
       document.getElementById('badgeTotalUnidades').innerText = `${filtrados.length} Unidades`;
 
       if (filtrados.length === 0) {
-        cuerpo.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-slate-400 font-semibold">No se encontraron unidades con los filtros seleccionados.</td></tr>`;
+        cuerpo.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400 font-semibold">No se encontraron unidades con los filtros seleccionados.</td></tr>`;
         return;
       }
 
       cuerpo.innerHTML = filtrados.map((t, idx) => {
-        // Formateo de fecha y hora
         let fechaHoraStr = '-';
         if (t.fechaHoraRegistro) {
           const d = t.fechaHoraRegistro.toMillis ? new Date(t.fechaHoraRegistro.toMillis()) : new Date(t.fechaHoraRegistro);
@@ -671,23 +661,28 @@
 
         return `
           <tr class="hover:bg-slate-50 transition-colors">
+            <!-- 1. TURNO -->
             <td class="p-3 font-black text-slate-700">#${idx + 1}</td>
+
+            <!-- 2. FECHA Y HORA -->
             <td class="p-3 font-semibold text-slate-600 whitespace-nowrap">${fechaHoraStr}</td>
+
+            <!-- 3. PLACA / EMPRESA -->
             <td class="p-3">
               <span class="font-black text-slate-900 block">${t.placa}</span>
               <span class="text-[10px] text-slate-500">${t.empresa || '-'}</span>
             </td>
+
+            <!-- 4. CUBICAJE -->
             <td class="p-3 font-bold">${t.cubicaje || '-'}</td>
-            <td class="p-3">
-              <span class="font-bold px-2 py-0.5 rounded text-[10px] ${t.servicio === 'PROVINCIA' ? 'bg-indigo-100 text-indigo-800' : 'bg-emerald-100 text-emerald-800'}">
-                ${t.servicio}
-              </span>
-            </td>
+
+            <!-- 5. CONDUCTOR / CELULAR -->
             <td class="p-3">
               <span class="font-bold text-slate-800 block">${t.conductor || '-'}</span>
               <span class="text-slate-500 text-[11px]">${t.telefono || '-'}</span>
             </td>
-            <td class="p-3 font-semibold text-slate-600">${t.distanciaMetros ? t.distanciaMetros + ' m' : '-'}</td>
+
+            <!-- 6. ACCIONES ADMIN -->
             <td class="p-3 text-right space-x-1 whitespace-nowrap">
               <button onclick="verBitacoraTurno('${t.id}')" title="Ver Historial del Turno" class="p-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg">
                 <i class="fa-solid fa-clock-rotate-left"></i>
