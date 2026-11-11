@@ -367,7 +367,7 @@
     }
 
     // ==========================================
-    // REGLA DE BLOQUEO DE FORMULARIO Y 2DA UNIDAD
+    // REGLA DE BLOQUEO DE FORMULARIO Y 2DA UNIDAD (CORREGIDA)
     // ==========================================
     async function sincronizarMisTurnosActivos() {
       const turnosValidos = [];
@@ -390,6 +390,41 @@
       misRegistrosLocales = turnosValidos;
       localStorage.setItem('mis_turnos_trupal_v2', JSON.stringify(misRegistrosLocales));
 
+      // Si no tiene turnos activos, no tiene sentido tener autorizaciones o solicitudes residuales
+      if (misRegistrosLocales.length === 0) {
+        localStorage.removeItem('solicitud_2da_id');
+        localStorage.removeItem('segunda_autorizada');
+        solicitudSegundaPendiente = null;
+        segundaUnidadAutorizada = false;
+      }
+
+      // Validar si la solicitud pendiente realmente existe viva en Firestore
+      if (solicitudSegundaPendiente) {
+        try {
+          const snapSol = await db.collection('solicitudes_segunda_unidad').doc(solicitudSegundaPendiente).get();
+          if (!snapSol.exists) {
+            // La solicitud fue borrada en Firebase: limpiamos el bloqueo
+            localStorage.removeItem('solicitud_2da_id');
+            solicitudSegundaPendiente = null;
+          } else {
+            const dataSol = snapSol.data();
+            if (dataSol.estado === 'APROBADO') {
+              segundaUnidadAutorizada = true;
+              localStorage.setItem('segunda_autorizada', 'true');
+              localStorage.removeItem('solicitud_2da_id');
+              solicitudSegundaPendiente = null;
+            } else if (dataSol.estado === 'RECHAZADO') {
+              localStorage.removeItem('solicitud_2da_id');
+              solicitudSegundaPendiente = null;
+              segundaUnidadAutorizada = false;
+              localStorage.removeItem('segunda_autorizada');
+            }
+          }
+        } catch (err) {
+          console.error("Error verificando solicitud pendiente:", err);
+        }
+      }
+
       const formContainer = document.getElementById('contenedorCamposFormulario');
       const bannerBloqueo1 = document.getElementById('bannerBloqueoSegundaUnidad');
       const bannerLimite2 = document.getElementById('bannerLimiteMaximo');
@@ -403,6 +438,7 @@
         bannerLimite2.classList.remove('hidden');
         document.getElementById('placasDosActivasText').innerText = misRegistrosLocales.map(x => x.placa).join(' y ');
         formContainer.classList.add('opacity-30', 'pointer-events-none');
+        renderizarMisTurnos();
         return;
       }
 
@@ -413,20 +449,22 @@
         document.getElementById('placaActivaText').innerText = misRegistrosLocales[0].placa;
 
         if (segundaUnidadAutorizada) {
-          // Admin ya aprobó: se desbloquea el formulario para registrar la 2da unidad
+          // Admin ya aprobó: habilitar formulario para la 2da unidad
           btnSolicitar.classList.add('hidden');
           cajaEsperando.classList.add('hidden');
           cajaAutorizado.classList.remove('hidden');
           formContainer.classList.remove('opacity-30', 'pointer-events-none');
         } else if (solicitudSegundaPendiente) {
-          // Ya solicitó y está esperando
+          // Solicitud viva esperando respuesta del Admin
           btnSolicitar.classList.add('hidden');
           cajaEsperando.classList.remove('hidden');
           cajaAutorizado.classList.add('hidden');
           formContainer.classList.add('opacity-30', 'pointer-events-none');
+          escucharEstadoSolicitudSegunda();
         } else {
-          // Aún no solicita: FORMULARIO BLOQUEADO
+          // Aún no solicita: Mostrar botón naranja
           btnSolicitar.classList.remove('hidden');
+          btnSolicitar.disabled = false;
           cajaEsperando.classList.add('hidden');
           cajaAutorizado.classList.add('hidden');
           formContainer.classList.add('opacity-30', 'pointer-events-none');
@@ -445,11 +483,26 @@
       const btn = document.getElementById('btnSolicitar2da');
       const cajaEsperando = document.getElementById('cajaEsperandoAprobacion');
       btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i>Enviando...`;
 
       try {
         const placaActual = misRegistrosLocales.length > 0 ? misRegistrosLocales[0].placa : 'DESCONOCIDA';
+        
+        // Obtenemos los datos del primer turno para que el Admin sepa quién solicita
+        let conductorNombre = 'POR VERIFICAR';
+        let licenciaChofer = '---';
+        if (misRegistrosLocales.length > 0) {
+          const docSnap = await db.collection('registros_turnos').doc(misRegistrosLocales[0].id).get();
+          if (docSnap.exists) {
+            conductorNombre = docSnap.data().conductor || 'SIN NOMBRE';
+            licenciaChofer = docSnap.data().licencia || '---';
+          }
+        }
+
         const docRef = await db.collection('solicitudes_segunda_unidad').add({
           placaActiva: placaActual,
+          conductor: conductorNombre,
+          licencia: licenciaChofer,
           fechaHora: firebase.firestore.FieldValue.serverTimestamp(),
           estado: 'PENDIENTE'
         });
@@ -460,10 +513,10 @@
         btn.classList.add('hidden');
         cajaEsperando.classList.remove('hidden');
         escucharEstadoSolicitudSegunda();
-        alert("Solicitud enviada al Administrador. El formulario permanecerá bloqueado hasta su aprobación.");
       } catch (e) {
         alert("Error al enviar solicitud: " + e.message);
         btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-hand mr-1"></i><span>Solicitar permiso al Administrador</span>`;
       }
     }
 
@@ -472,7 +525,14 @@
 
       db.collection('solicitudes_segunda_unidad').doc(solicitudSegundaPendiente)
         .onSnapshot((doc) => {
-          if (!doc.exists) return;
+          if (!doc.exists) {
+            // Si el Admin borró el registro de la base de datos
+            localStorage.removeItem('solicitud_2da_id');
+            solicitudSegundaPendiente = null;
+            sincronizarMisTurnosActivos();
+            return;
+          }
+
           const data = doc.data();
 
           if (data.estado === 'APROBADO') {
@@ -481,18 +541,17 @@
             localStorage.removeItem('solicitud_2da_id');
             solicitudSegundaPendiente = null;
             sincronizarMisTurnosActivos();
-            alert("¡Tu solicitud de 2da unidad ha sido APROBADA por el Administrador! Ya puedes completar el registro.");
+            alert("¡Autorización concedida! Ya puedes registrar tu segunda unidad.");
           } else if (data.estado === 'RECHAZADO') {
             localStorage.removeItem('solicitud_2da_id');
             solicitudSegundaPendiente = null;
             segundaUnidadAutorizada = false;
             localStorage.removeItem('segunda_autorizada');
             sincronizarMisTurnosActivos();
-            alert("Tu solicitud de 2da unidad fue RECHAZADA por el Administrador.");
+            alert("Tu solicitud para registrar una segunda unidad fue rechazada por el Administrador.");
           }
         });
     }
-
     // ==========================================
     // PASO 1: PLACA DEL CAMIÓN (CON CONTROL DE DUPLICIDAD)
     // ==========================================
