@@ -210,12 +210,13 @@
               <th class="p-3">Placa / Empresa</th>
               <th class="p-3">Cubicaje</th>
               <th class="p-3">Conductor / Celular</th>
+              <th class="p-3">Estado</th>
               <th class="p-3 text-right">Acciones Admin</th>
             </tr>
           </thead>
           <tbody id="tablaCuerpoTurnos" class="divide-y divide-slate-100">
             <tr>
-              <td colspan="7" class="text-center py-6 text-slate-400 font-semibold">Cargando unidades...</td>
+              <td colspan="8" class="text-center py-6 text-slate-400 font-semibold">Cargando unidades...</td>
             </tr>
           </tbody>
         </table>
@@ -646,7 +647,7 @@
       document.getElementById('badgeTotalUnidades').innerText = `${filtrados.length} Unidades`;
 
       if (filtrados.length === 0) {
-        cuerpo.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-400 font-semibold">No se encontraron unidades con los filtros seleccionados.</td></tr>`;
+        cuerpo.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-slate-400 font-semibold">No se encontraron unidades con los filtros seleccionados.</td></tr>`;
         return;
       }
 
@@ -690,7 +691,21 @@
               <span class="text-slate-500 text-[11px]">${t.telefono || '-'}</span>
             </td>
 
-            <!-- 7. ACCIONES ADMIN -->
+            <!-- 7. ESTADO -->
+            <td class="p-3">
+              <span class="font-black text-[10px] px-2 py-0.5 rounded uppercase ${
+                t.estado === 'DISPONIBLE' ? 'bg-emerald-100 text-emerald-800' :
+                t.estado === 'PENDIENTE_ADMIN' ? 'bg-indigo-100 text-indigo-800' :
+                t.estado === 'ASIGNADO' ? 'bg-blue-100 text-blue-800' :
+                t.estado === 'PAUSADO_MECANICO' ? 'bg-amber-100 text-amber-800' : 
+                t.estado === 'ANULADO' ? 'bg-red-100 text-red-800' : 
+                t.estado === 'DESPACHADO' ? 'bg-slate-200 text-slate-800' : 'bg-slate-100 text-slate-700'
+              }">
+                ${t.estado}
+              </span>
+            </td>
+
+            <!-- 8. ACCIONES ADMIN -->
             <td class="p-3 text-right space-x-1 whitespace-nowrap">
               <button onclick="verBitacoraTurno('${t.id}')" title="Ver Historial del Turno" class="p-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg">
                 <i class="fa-solid fa-clock-rotate-left"></i>
