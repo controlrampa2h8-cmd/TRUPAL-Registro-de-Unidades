@@ -206,6 +206,7 @@
             <tr>
               <th class="p-3">Turno</th>
               <th class="p-3">Fecha y Hora</th>
+              <th class="p-3">Servicio</th>
               <th class="p-3">Placa / Empresa</th>
               <th class="p-3">Cubicaje</th>
               <th class="p-3">Conductor / Celular</th>
@@ -214,7 +215,7 @@
           </thead>
           <tbody id="tablaCuerpoTurnos" class="divide-y divide-slate-100">
             <tr>
-              <td colspan="6" class="text-center py-6 text-slate-400 font-semibold">Cargando unidades...</td>
+              <td colspan="7" class="text-center py-6 text-slate-400 font-semibold">Cargando unidades...</td>
             </tr>
           </tbody>
         </table>
@@ -645,7 +646,7 @@
       document.getElementById('badgeTotalUnidades').innerText = `${filtrados.length} Unidades`;
 
       if (filtrados.length === 0) {
-        cuerpo.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400 font-semibold">No se encontraron unidades con los filtros seleccionados.</td></tr>`;
+        cuerpo.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-400 font-semibold">No se encontraron unidades con los filtros seleccionados.</td></tr>`;
         return;
       }
 
@@ -667,22 +668,29 @@
             <!-- 2. FECHA Y HORA -->
             <td class="p-3 font-semibold text-slate-600 whitespace-nowrap">${fechaHoraStr}</td>
 
-            <!-- 3. PLACA / EMPRESA -->
+            <!-- 3. SERVICIO -->
+            <td class="p-3">
+              <span class="font-bold px-2 py-0.5 rounded text-[10px] ${t.servicio === 'PROVINCIA' ? 'bg-indigo-100 text-indigo-800' : 'bg-emerald-100 text-emerald-800'}">
+                ${t.servicio}
+              </span>
+            </td>
+
+            <!-- 4. PLACA / EMPRESA -->
             <td class="p-3">
               <span class="font-black text-slate-900 block">${t.placa}</span>
               <span class="text-[10px] text-slate-500">${t.empresa || '-'}</span>
             </td>
 
-            <!-- 4. CUBICAJE -->
+            <!-- 5. CUBICAJE -->
             <td class="p-3 font-bold">${t.cubicaje || '-'}</td>
 
-            <!-- 5. CONDUCTOR / CELULAR -->
+            <!-- 6. CONDUCTOR / CELULAR -->
             <td class="p-3">
               <span class="font-bold text-slate-800 block">${t.conductor || '-'}</span>
               <span class="text-slate-500 text-[11px]">${t.telefono || '-'}</span>
             </td>
 
-            <!-- 6. ACCIONES ADMIN -->
+            <!-- 7. ACCIONES ADMIN -->
             <td class="p-3 text-right space-x-1 whitespace-nowrap">
               <button onclick="verBitacoraTurno('${t.id}')" title="Ver Historial del Turno" class="p-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg">
                 <i class="fa-solid fa-clock-rotate-left"></i>
