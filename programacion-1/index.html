@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Programación Grupo 1 - TRUPAL Huachipa 2</title>
+  <title>Panel Programación - TRUPAL Huachipa 2</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   
@@ -37,42 +37,19 @@
         </div>
       </div>
 
-      <div class="flex items-center space-x-2 text-xs font-bold">
-        <span id="badgeMisAsignadasTotal" class="bg-white/10 px-3 py-1.5 rounded-lg border border-white/20">
-          Mis Unidades: 0
-        </span>
-        <a href="../conductor/" target="_blank" class="bg-blue-700 hover:bg-blue-600 px-3 py-1.5 rounded-lg flex items-center space-x-1.5">
-          <i class="fa-solid fa-mobile-screen"></i>
-          <span>Ver Conductor</span>
-        </a>
+      <!-- BOTÓN PARA ABRIR SUBVENTANA DE MIS UNIDADES ASIGNADAS -->
+      <div class="flex items-center space-x-2">
+        <button onclick="abrirModalMisUnidades()" class="bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 font-black px-4 py-2 rounded-xl text-xs shadow-md flex items-center space-x-2 transition-all">
+          <i class="fa-solid fa-truck-ramp-box"></i>
+          <span id="btnMisAsignadasTexto">Mis Unidades Asignadas: 0</span>
+        </button>
       </div>
     </div>
   </header>
 
-  <!-- CONTENEDOR PRINCIPAL -->
-  <main class="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
+  <!-- CONTENEDOR PRINCIPAL: SOLO FLOTA DISPONIBLE EN COCHERA -->
+  <main class="max-w-7xl mx-auto p-4 md:p-6 space-y-4">
 
-    <!-- SECCIÓN 1: MIS UNIDADES ASIGNADAS (TRABAJO EN CURSO) -->
-    <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
-      <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
-        <div>
-          <h2 class="font-black text-sm text-slate-800 uppercase flex items-center space-x-2">
-            <i class="fa-solid fa-truck-ramp-box text-blue-600"></i>
-            <span id="txtTituloMisUnidades">Unidades Asignadas a Mi Grupo</span>
-          </h2>
-          <p class="text-xs text-slate-500 mt-0.5">Camiones tomados bajo tu responsabilidad para asignación de pedido.</p>
-        </div>
-        <span id="badgeContadorMisUnidades" class="text-xs font-black bg-blue-50 text-blue-700 px-3 py-1 rounded-full">
-          0 Activas
-        </span>
-      </div>
-
-      <div id="cuerpoMisAsignadas" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <p class="text-slate-400 text-xs py-6 text-center col-span-full">No tienes unidades asignadas en este momento.</p>
-      </div>
-    </div>
-
-    <!-- SECCIÓN 2: COLA GENERAL DE UNIDADES DISPONIBLES (PARA ASIGNAR) -->
     <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
       <div class="flex flex-col md:flex-row md:items-center justify-between pb-3 border-b border-slate-100 gap-2">
         <div>
@@ -80,21 +57,22 @@
             <i class="fa-solid fa-truck text-emerald-600"></i>
             <span>Flota Disponible en Cochera (Orden FIFO)</span>
           </h2>
-          <p class="text-xs text-slate-500 mt-0.5">Unidades esperando asignación de carga en patio.</p>
+          <p class="text-xs text-slate-500 mt-0.5">Unidades esperando asignación de carga en patio en orden estricto de llegada.</p>
         </div>
         <span id="badgeDisponiblesTotal" class="text-xs font-black bg-emerald-50 text-emerald-800 px-3 py-1 rounded-full w-fit">
           0 Unidades Libres
         </span>
       </div>
 
-      <!-- FILTROS RÁPIDOS DE BÚSQUEDA -->
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs">
+      <!-- BARRA DE FILTROS CRUZADOS (INCLUYE INDUCCIÓN DE CLIENTE Y CAPACIDAD) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs">
         <div>
           <label class="block font-bold text-slate-600 mb-1">Buscar Placa / Empresa:</label>
           <input type="text" id="filtroTexto" oninput="renderizarDisponibles()" placeholder="Filtrar por texto..." class="w-full uppercase font-bold p-2 border border-slate-300 rounded-lg focus:outline-none bg-white">
         </div>
+
         <div>
-          <label class="block font-bold text-slate-600 mb-1">Cubicaje:</label>
+          <label class="block font-bold text-slate-600 mb-1">Capacidad / Cubicaje:</label>
           <select id="filtroCubicaje" onchange="renderizarDisponibles()" class="w-full font-bold p-2 border border-slate-300 rounded-lg focus:outline-none bg-white">
             <option value="TODOS">Todos</option>
             <option value="10 M3">10 M3</option>
@@ -110,6 +88,7 @@
             <option value="PLATAFORMA">PLATAFORMA</option>
           </select>
         </div>
+
         <div>
           <label class="block font-bold text-slate-600 mb-1">Servicio:</label>
           <select id="filtroServicio" onchange="renderizarDisponibles()" class="w-full font-bold p-2 border border-slate-300 rounded-lg focus:outline-none bg-white">
@@ -118,9 +97,28 @@
             <option value="PROVINCIA">PROVINCIA</option>
           </select>
         </div>
+
+        <!-- FILTRO DE CLIENTE QUE PIDE INDUCCIÓN -->
+        <div class="bg-indigo-50/70 p-1.5 rounded-lg border border-indigo-200">
+          <label class="block font-black text-indigo-950 mb-1 flex items-center justify-between">
+            <span>Cliente con Inducción:</span>
+            <i class="fa-solid fa-id-badge text-indigo-600"></i>
+          </label>
+          <select id="filtroClienteInduccion" onchange="renderizarDisponibles()" class="w-full font-bold p-1.5 border border-indigo-300 rounded-lg focus:outline-none bg-white text-indigo-900">
+            <option value="TODOS">Cualquier Chofer (Sin filtro inducción)</option>
+            <option value="ALICORP">ALICORP</option>
+            <option value="BACKUS">BACKUS</option>
+            <option value="KIMBERLY">KIMBERLY CLARK</option>
+            <option value="NESTLE">NESTLE</option>
+            <option value="LINDLEY">ARCA CONTINENTAL LINDLEY</option>
+            <option value="TRUPAL">TRUPAL (Planta)</option>
+            <option value="GLORIA">GLORIA</option>
+            <option value="SAN_FERNANDO">SAN FERNANDO</option>
+          </select>
+        </div>
       </div>
 
-      <!-- TABLA DE DISPONIBLES -->
+      <!-- TABLA DE DISPONIBLES EN ORDEN FIFO -->
       <div class="overflow-x-auto">
         <table class="w-full text-left text-xs">
           <thead class="bg-slate-50 text-slate-600 uppercase font-black border-y border-slate-200">
@@ -130,7 +128,7 @@
               <th class="p-3">Servicio</th>
               <th class="p-3">Placa / Empresa</th>
               <th class="p-3">Cubicaje</th>
-              <th class="p-3">Conductor / Celular</th>
+              <th class="p-3">Conductor / Inducciones</th>
               <th class="p-3 text-right">Acción</th>
             </tr>
           </thead>
@@ -144,6 +142,39 @@
     </div>
 
   </main>
+
+  <!-- ============================================================ -->
+  <!-- SUBVENTANA (MODAL): UNIDADES ASIGNADAS A MI GRUPO           -->
+  <!-- ============================================================ -->
+  <div id="modalMisUnidades" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-4xl w-full p-5 shadow-2xl flex flex-col max-h-[88vh] space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div class="flex items-center space-x-2">
+          <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold text-lg">
+            <i class="fa-solid fa-truck-ramp-box"></i>
+          </div>
+          <div>
+            <h3 class="font-black text-sm text-slate-900 uppercase">Unidades Asignadas a Mi Grupo</h3>
+            <p id="subtituloMisUnidadesModal" class="text-[11px] text-slate-500 font-semibold">Gestión de unidades tomadas para carga</p>
+          </div>
+        </div>
+        <button onclick="cerrarModalMisUnidades()" class="text-slate-400 hover:text-slate-600 text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- LISTADO DE TARJETAS ASIGNADAS -->
+      <div id="cuerpoMisAsignadasModal" class="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto pr-1 flex-1 text-xs">
+        <!-- Render dinámico -->
+      </div>
+
+      <div class="pt-3 border-t border-slate-100 text-right">
+        <button onclick="cerrarModalMisUnidades()" class="py-2 px-5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- MODAL: TRANSFERIR A OTRO GRUPO -->
   <div id="modalTransferir" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
@@ -184,14 +215,9 @@
   </div>
 
   <script>
-    // ============================================================
-    // CONFIGURACIÓN DE IDENTIDAD SEGÚN CARPETA (MODULAR)
-    // ============================================================
-    // Detecta automáticamente si está en programacion-1, rampa-1, etc.
     const rutaActual = window.location.pathname;
     let MI_IDENTIDAD = "GRUPO_1";
     let MI_NOMBRE_PANEL = "PANEL PROGRAMACIÓN: GRUPO 1";
-    let ES_RAMPA = false;
 
     if (rutaActual.includes("programacion-2")) {
       MI_IDENTIDAD = "GRUPO_2";
@@ -199,31 +225,35 @@
     } else if (rutaActual.includes("programacion-3")) {
       MI_IDENTIDAD = "GRUPO_3";
       MI_NOMBRE_PANEL = "PANEL PROGRAMACIÓN: GRUPO 3";
-    } else if (rutaActual.includes("rampa-1")) {
-      MI_IDENTIDAD = "RAMPA_1";
-      MI_NOMBRE_PANEL = "CONTROL OPERATIVO: RAMPA 1";
-      ES_RAMPA = true;
-    } else if (rutaActual.includes("rampa-2")) {
-      MI_IDENTIDAD = "RAMPA_2";
-      MI_NOMBRE_PANEL = "CONTROL OPERATIVO: RAMPA 2";
-      ES_RAMPA = true;
     }
 
     document.getElementById('txtTituloPanel').innerText = MI_NOMBRE_PANEL;
-    if (ES_RAMPA) {
-      document.getElementById('badgeRolIcono').className = "w-10 h-10 bg-indigo-600 text-white font-black rounded-xl flex items-center justify-center text-lg shadow";
-      document.getElementById('badgeRolIcono').innerHTML = `<i class="fa-solid fa-truck-fast"></i>`;
-    }
 
     let todasLasUnidades = [];
+    let mapaConductores = {};
     let idTurnoTransferir = null;
 
-    window.onload = function() {
+    window.onload = async function() {
+      await cargarMaestroConductores();
       escucharTurnosEnVivo();
     };
 
     // ============================================================
-    // SINCRONIZACIÓN EN TIEMPO REAL
+    // CARGAR INDUCCIONES DE CONDUCTORES
+    // ============================================================
+    async function cargarMaestroConductores() {
+      try {
+        const snap = await db.collection('conductores').get();
+        snap.forEach(doc => {
+          mapaConductores[doc.id] = doc.data(); // doc.id es la licencia
+        });
+      } catch (e) {
+        console.error("Error al cargar maestro conductores:", e);
+      }
+    }
+
+    // ============================================================
+    // ESCUCHA EN TIEMPO REAL
     // ============================================================
     function escucharTurnosEnVivo() {
       db.collection('registros_turnos')
@@ -237,115 +267,64 @@
             return tA - tB;
           });
 
-          renderizarMisAsignadas();
+          actualizarContadorMisUnidades();
           renderizarDisponibles();
+          renderizarModalMisUnidades();
         }, (err) => {
           console.error("Error escuchando turnos:", err);
         });
     }
 
-    // ============================================================
-    // RENDER 1: MIS UNIDADES ASIGNADAS (EN GESTIÓN)
-    // ============================================================
-    function renderizarMisAsignadas() {
-      const cont = document.getElementById('cuerpoMisAsignadas');
-      
-      // Filtrar unidades que están asignadas específicamente a MI_IDENTIDAD
+    function actualizarContadorMisUnidades() {
       const misUnidades = todasLasUnidades.filter(u => 
         u.asignadoA === MI_IDENTIDAD && ['ASIGNADO', 'EN_BAHIA'].includes(u.estado)
       );
-
-      document.getElementById('badgeContadorMisUnidades').innerText = `${misUnidades.length} Activas`;
-      document.getElementById('badgeMisAsignadasTotal').innerText = `Mis Unidades: ${misUnidades.length}`;
-
-      if (misUnidades.length === 0) {
-        cont.innerHTML = `<p class="text-slate-400 text-xs py-6 text-center col-span-full">No tienes unidades asignadas en este momento.</p>`;
-        return;
-      }
-
-      cont.innerHTML = misUnidades.map(u => `
-        <div class="border-2 ${u.estado === 'EN_BAHIA' ? 'border-amber-400 bg-amber-50/40' : 'border-blue-200 bg-blue-50/30'} rounded-2xl p-4 shadow-sm flex flex-col justify-between space-y-3">
-          <div>
-            <div class="flex items-center justify-between pb-2 border-b border-slate-200">
-              <span class="text-xs font-black px-2 py-0.5 rounded ${u.estado === 'EN_BAHIA' ? 'bg-amber-500 text-white animate-pulse' : 'bg-blue-600 text-white'}">
-                ${u.estado}
-              </span>
-              <span class="text-[11px] font-bold text-slate-500">${u.cubicaje} • ${u.servicio}</span>
-            </div>
-
-            <div class="mt-2">
-              <h3 class="text-xl font-black text-slate-900 tracking-wide">${u.placa}</h3>
-              <p class="text-[11px] text-slate-600 font-bold">${u.empresa || '-'}</p>
-            </div>
-
-            <div class="mt-2 text-xs text-slate-700 bg-white/70 p-2.5 rounded-xl border border-slate-200 space-y-0.5">
-              <p>Chofer: <strong class="text-slate-900">${u.conductor || '-'}</strong></p>
-              <p>Celular: <a href="tel:${u.telefono}" class="text-blue-700 font-black underline">${u.telefono || '-'}</a></p>
-            </div>
-          </div>
-
-          <!-- BOTONES DE ACCIÓN PARA MI UNIDAD -->
-          <div class="space-y-1.5 pt-2 border-t border-slate-200 text-xs font-bold">
-            
-            ${ES_RAMPA ? `
-              <!-- ACCIONES EXCLUSIVAS DE RAMPA -->
-              <div class="grid grid-cols-2 gap-1.5">
-                <button onclick="cambiarEstadoRampa('${u.id}', 'EN_BAHIA')" class="py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl shadow active:scale-95 flex items-center justify-center space-x-1">
-                  <i class="fa-solid fa-bell"></i>
-                  <span>A Bahía</span>
-                </button>
-                <button onclick="cambiarEstadoRampa('${u.id}', 'DESPACHADO')" class="py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow active:scale-95 flex items-center justify-center space-x-1">
-                  <i class="fa-solid fa-circle-check"></i>
-                  <span>Salida / Despacho</span>
-                </button>
-              </div>
-              <button onclick="rechazarEnRampa('${u.id}')" class="w-full py-1.5 bg-red-100 hover:bg-red-200 text-red-800 rounded-xl active:scale-95 text-[11px]">
-                <i class="fa-solid fa-triangle-exclamation mr-1"></i>Rechazo Físico en Rampa
-              </button>
-            ` : ''}
-
-            <!-- ACCIONES DE PROGRAMADOR (LIBERAR O TRANSFERIR) -->
-            <div class="grid grid-cols-2 gap-1.5">
-              <button onclick="abrirModalTransferir('${u.id}', '${u.placa}')" class="py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl active:scale-95 flex items-center justify-center space-x-1">
-                <i class="fa-solid fa-arrow-right-arrow-left"></i>
-                <span>Transferir</span>
-              </button>
-              <button onclick="liberarCargaCaida('${u.id}')" class="py-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-xl active:scale-95 flex items-center justify-center space-x-1" title="Si se canceló el pedido, regresa a la cola general en su puesto original">
-                <i class="fa-solid fa-rotate-left"></i>
-                <span>Carga Caída</span>
-              </button>
-            </div>
-
-          </div>
-        </div>
-      `).join('');
+      document.getElementById('btnMisAsignadasTexto').innerText = `Mis Unidades Asignadas: ${misUnidades.length}`;
     }
 
     // ============================================================
-    // RENDER 2: COLA DE DISPONIBLES (PARA ASIGNAR)
+    // RENDER: COLA DE DISPONIBLES CON FILTROS E INDUCCIÓN
     // ============================================================
     function renderizarDisponibles() {
       const cuerpo = document.getElementById('tablaDisponiblesCuerpo');
       const filtroTxt = (document.getElementById('filtroTexto')?.value || '').trim().toUpperCase();
       const filtroCub = document.getElementById('filtroCubicaje')?.value || 'TODOS';
       const filtroServ = document.getElementById('filtroServicio')?.value || 'TODOS';
+      const filtroInduccion = document.getElementById('filtroClienteInduccion')?.value || 'TODOS';
 
-      // Solo mostramos unidades estrictamente DISPONIBLES
       let disponibles = todasLasUnidades.filter(u => u.estado === 'DISPONIBLE');
 
+      // 1. Filtro texto (Placa o Empresa)
       if (filtroTxt) {
         disponibles = disponibles.filter(u => 
           (u.placa || '').toUpperCase().includes(filtroTxt) || 
           (u.empresa || '').toUpperCase().includes(filtroTxt)
         );
       }
+
+      // 2. Filtro Cubicaje
       if (filtroCub !== 'TODOS') disponibles = disponibles.filter(u => u.cubicaje === filtroCub);
+
+      // 3. Filtro Servicio
       if (filtroServ !== 'TODOS') disponibles = disponibles.filter(u => u.servicio === filtroServ);
+
+      // 4. Filtro Inducción de Cliente (Consulta brevete)
+      if (filtroInduccion !== 'TODOS') {
+        disponibles = disponibles.filter(u => {
+          const lic = u.licencia;
+          const datosChofer = mapaConductores[lic];
+          if (!datosChofer || !datosChofer.inducciones_clientes) return false;
+          
+          return datosChofer.inducciones_clientes.some(ind => 
+            ind.toUpperCase().includes(filtroInduccion)
+          );
+        });
+      }
 
       document.getElementById('badgeDisponiblesTotal').innerText = `${disponibles.length} Unidades Libres`;
 
       if (disponibles.length === 0) {
-        cuerpo.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-400 font-semibold">No hay unidades disponibles en cola con estos filtros.</td></tr>`;
+        cuerpo.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-400 font-semibold">No hay unidades disponibles con los filtros seleccionados.</td></tr>`;
         return;
       }
 
@@ -355,6 +334,13 @@
           const d = u.fechaHoraRegistro.toMillis ? new Date(u.fechaHoraRegistro.toMillis()) : new Date(u.fechaHoraRegistro);
           fStr = d.toLocaleString('es-PE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', hour12: true });
         }
+
+        // Obtener inducciones del chofer para mostrarlas visualmente
+        const datosChofer = mapaConductores[u.licencia];
+        const inducciones = (datosChofer && datosChofer.inducciones_clientes) ? datosChofer.inducciones_clientes : [];
+        const chipsInduccion = inducciones.map(ind => 
+          `<span class="bg-indigo-100 text-indigo-800 text-[9px] font-black px-1.5 py-0.2 rounded">${ind}</span>`
+        ).join(' ');
 
         return `
           <tr class="hover:bg-slate-50 transition-colors">
@@ -372,7 +358,8 @@
             <td class="p-3 font-bold">${u.cubicaje || '-'}</td>
             <td class="p-3">
               <span class="font-bold text-slate-800 block">${u.conductor || '-'}</span>
-              <span class="text-slate-500 text-[11px]">${u.telefono || '-'}</span>
+              <span class="text-slate-500 text-[11px] block">${u.telefono || '-'}</span>
+              <div class="flex flex-wrap gap-1 mt-1">${chipsInduccion || '<span class="text-[10px] text-slate-400">Sin inducciones registradas</span>'}</div>
             </td>
             <td class="p-3 text-right">
               <button onclick="tomarAsignacion('${u.id}', '${u.placa}')" class="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-black px-4 py-2 rounded-xl text-xs shadow flex items-center space-x-1.5 ml-auto">
@@ -386,7 +373,65 @@
     }
 
     // ============================================================
-    // ACCIÓN 1: TOMAR ASIGNACIÓN CONCURRENTE
+    // MODAL DE MIS UNIDADES ASIGNADAS
+    // ============================================================
+    function abrirModalMisUnidades() {
+      renderizarModalMisUnidades();
+      document.getElementById('modalMisUnidades').classList.remove('hidden');
+    }
+
+    function cerrarModalMisUnidades() {
+      document.getElementById('modalMisUnidades').classList.add('hidden');
+    }
+
+    function renderizarModalMisUnidades() {
+      const cont = document.getElementById('cuerpoMisAsignadasModal');
+      const misUnidades = todasLasUnidades.filter(u => 
+        u.asignadoA === MI_IDENTIDAD && ['ASIGNADO', 'EN_BAHIA'].includes(u.estado)
+      );
+
+      if (misUnidades.length === 0) {
+        cont.innerHTML = `<p class="text-slate-400 text-xs py-8 text-center col-span-full">No tienes unidades asignadas a tu grupo en este momento.</p>`;
+        return;
+      }
+
+      cont.innerHTML = misUnidades.map(u => `
+        <div class="border-2 border-blue-200 bg-blue-50/40 rounded-2xl p-4 shadow-sm flex flex-col justify-between space-y-3">
+          <div>
+            <div class="flex items-center justify-between pb-2 border-b border-slate-200">
+              <span class="text-xs font-black px-2 py-0.5 rounded bg-blue-600 text-white">
+                ${u.estado}
+              </span>
+              <span class="text-[11px] font-bold text-slate-500">${u.cubicaje} • ${u.servicio}</span>
+            </div>
+
+            <div class="mt-2">
+              <h3 class="text-xl font-black text-slate-900 tracking-wide">${u.placa}</h3>
+              <p class="text-[11px] text-slate-600 font-bold">${u.empresa || '-'}</p>
+            </div>
+
+            <div class="mt-2 text-xs text-slate-700 bg-white p-2.5 rounded-xl border border-slate-200 space-y-0.5">
+              <p>Conductor: <strong class="text-slate-900">${u.conductor || '-'}</strong></p>
+              <p>Celular: <a href="tel:${u.telefono}" class="text-blue-700 font-black underline">${u.telefono || '-'}</a></p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-200 text-xs font-bold">
+            <button onclick="abrirModalTransferir('${u.id}', '${u.placa}')" class="py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl active:scale-95 flex items-center justify-center space-x-1">
+              <i class="fa-solid fa-arrow-right-arrow-left"></i>
+              <span>Transferir</span>
+            </button>
+            <button onclick="liberarCargaCaida('${u.id}')" class="py-2.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-xl active:scale-95 flex items-center justify-center space-x-1" title="Si se cae el pedido, retorna a la cola general en su puesto original">
+              <i class="fa-solid fa-rotate-left"></i>
+              <span>Carga Caída</span>
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ============================================================
+    // ACCIONES: TOMAR, LIBERAR Y TRANSFERIR
     // ============================================================
     async function tomarAsignacion(idTurno, placa) {
       try {
@@ -400,7 +445,6 @@
           motivo: `Unidad tomada por ${MI_NOMBRE_PANEL}`
         });
 
-        // Actualizamos Firestore: pasa a ASIGNADO y a mi grupo
         await db.collection('registros_turnos').doc(idTurno).update({
           estado: 'ASIGNADO',
           asignadoA: MI_IDENTIDAD,
@@ -413,9 +457,6 @@
       }
     }
 
-    // ============================================================
-    // ACCIÓN 2: LIBERAR POR CARGA CAÍDA (CONSERVA PUESTO FIFO)
-    // ============================================================
     async function liberarCargaCaida(idTurno) {
       const motivo = prompt("¿Motivo de la cancelación de carga?", "Pedido cancelado por cliente / Cambio de programación");
       if (!motivo) return;
@@ -431,7 +472,6 @@
           motivo: `Carga cancelada: ${motivo}. Retorna a DISPONIBLE con fecha original intacta.`
         });
 
-        // Regresa a DISPONIBLE, quitando asignadoA pero MANTENIENDO fechaHoraRegistro
         await db.collection('registros_turnos').doc(idTurno).update({
           estado: 'DISPONIBLE',
           asignadoA: null,
@@ -445,9 +485,6 @@
       }
     }
 
-    // ============================================================
-    // ACCIÓN 3: TRANSFERIR A OTRO GRUPO
-    // ============================================================
     function abrirModalTransferir(id, placa) {
       idTurnoTransferir = id;
       document.getElementById('txtPlacaTransferir').innerText = placa;
@@ -488,57 +525,6 @@
         cerrarModalTransferir();
       } catch (e) {
         alert("Error al transferir: " + e.message);
-      }
-    }
-
-    // ============================================================
-    // ACCIONES EXCLUSIVAS DE RAMPA (BAHÍA, SALIDA, RECHAZO)
-    // ============================================================
-    async function cambiarEstadoRampa(idTurno, nuevoEstado) {
-      try {
-        const turno = todasLasUnidades.find(t => t.id === idTurno);
-        const bitacora = turno && turno.bitacora_eventos ? [...turno.bitacora_eventos] : [];
-
-        bitacora.push({
-          fecha: new Date().toISOString(),
-          usuario: MI_IDENTIDAD,
-          tipo: nuevoEstado === 'EN_BAHIA' ? 'LLAMADO_A_BAHIA' : 'DESPACHO_SALIDA',
-          motivo: nuevoEstado === 'EN_BAHIA' ? 'Camión llamado a rampa para inicio de carga' : 'Carga completada, salida autorizada'
-        });
-
-        await db.collection('registros_turnos').doc(idTurno).update({
-          estado: nuevoEstado,
-          bitacora_eventos: bitacora
-        });
-
-      } catch (e) {
-        alert("Error al actualizar rampa: " + e.message);
-      }
-    }
-
-    async function rechazarEnRampa(idTurno) {
-      const motivo = prompt("Motivo del rechazo físico en rampa (Piso, carpa rota, sin tacos, SSOMA):", "Piso de carreta en mal estado");
-      if (!motivo) return;
-
-      try {
-        const turno = todasLasUnidades.find(t => t.id === idTurno);
-        const bitacora = turno && turno.bitacora_eventos ? [...turno.bitacora_eventos] : [];
-
-        bitacora.push({
-          fecha: new Date().toISOString(),
-          usuario: MI_IDENTIDAD,
-          tipo: 'RECHAZO_FISICO_RAMPA',
-          motivo: `Rechazado en rampa: ${motivo}`
-        });
-
-        await db.collection('registros_turnos').doc(idTurno).update({
-          estado: 'RECHAZADO_RAMPA',
-          bitacora_eventos: bitacora
-        });
-
-        alert("Unidad marcada como RECHAZADO EN RAMPA.");
-      } catch (e) {
-        alert("Error al registrar rechazo: " + e.message);
       }
     }
   </script>
