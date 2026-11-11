@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Programación Grupo 1 - TRUPAL Huachipa 2</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  
+  <!-- Firebase Compat Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  
+  <script src="../shared/firebase-init.js"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased min-h-screen">
+
+  <!-- CABECERA OPERATIVA -->
+  <header class="bg-blue-900 text-white p-4 shadow-lg sticky top-0 z-40 border-b border-blue-800">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-3">
+      <div class="flex items-center space-x-3">
+        <div id="badgeRolIcono" class="w-10 h-10 bg-blue-500 text-white font-black rounded-xl flex items-center justify-center text-lg shadow">
+          <i class="fa-solid fa-clipboard-list"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <h1 id="txtTituloPanel" class="text-lg font-black tracking-wide leading-tight">PANEL PROGRAMACIÓN: GRUPO 1</h1>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500 text-white animate-pulse">
+              EN VIVO
+            </span>
+          </div>
+          <p class="text-xs text-blue-200">Cochera TRUPAL Huachipa 2 • Despacho de Carga</p>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-2 text-xs font-bold">
+        <span id="badgeMisAsignadasTotal" class="bg-white/10 px-3 py-1.5 rounded-lg border border-white/20">
+          Mis Unidades: 0
+        </span>
+        <a href="../conductor/" target="_blank" class="bg-blue-700 hover:bg-blue-600 px-3 py-1.5 rounded-lg flex items-center space-x-1.5">
+          <i class="fa-solid fa-mobile-screen"></i>
+          <span>Ver Conductor</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTENEDOR PRINCIPAL -->
+  <main class="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
+
+    <!-- SECCIÓN 1: MIS UNIDADES ASIGNADAS (TRABAJO EN CURSO) -->
+    <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+        <div>
+          <h2 class="font-black text-sm text-slate-800 uppercase flex items-center space-x-2">
+            <i class="fa-solid fa-truck-ramp-box text-blue-600"></i>
+            <span id="txtTituloMisUnidades">Unidades Asignadas a Mi Grupo</span>
+          </h2>
+          <p class="text-xs text-slate-500 mt-0.5">Camiones tomados bajo tu responsabilidad para asignación de pedido.</p>
+        </div>
+        <span id="badgeContadorMisUnidades" class="text-xs font-black bg-blue-50 text-blue-700 px-3 py-1 rounded-full">
+          0 Activas
+        </span>
+      </div>
+
+      <div id="cuerpoMisAsignadas" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <p class="text-slate-400 text-xs py-6 text-center col-span-full">No tienes unidades asignadas en este momento.</p>
+      </div>
+    </div>
+
+    <!-- SECCIÓN 2: COLA GENERAL DE UNIDADES DISPONIBLES (PARA ASIGNAR) -->
+    <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
+      <div class="flex flex-col md:flex-row md:items-center justify-between pb-3 border-b border-slate-100 gap-2">
+        <div>
+          <h2 class="font-black text-sm text-slate-800 uppercase flex items-center space-x-2">
+            <i class="fa-solid fa-truck text-emerald-600"></i>
+            <span>Flota Disponible en Cochera (Orden FIFO)</span>
+          </h2>
+          <p class="text-xs text-slate-500 mt-0.5">Unidades esperando asignación de carga en patio.</p>
+        </div>
+        <span id="badgeDisponiblesTotal" class="text-xs font-black bg-emerald-50 text-emerald-800 px-3 py-1 rounded-full w-fit">
+          0 Unidades Libres
+        </span>
+      </div>
+
+      <!-- FILTROS RÁPIDOS DE BÚSQUEDA -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs">
+        <div>
+          <label class="block font-bold text-slate-600 mb-1">Buscar Placa / Empresa:</label>
+          <input type="text" id="filtroTexto" oninput="renderizarDisponibles()" placeholder="Filtrar por texto..." class="w-full uppercase font-bold p-2 border border-slate-300 rounded-lg focus:outline-none bg-white">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-600 mb-1">Cubicaje:</label>
+          <select id="filtroCubicaje" onchange="renderizarDisponibles()" class="w-full font-bold p-2 border border-slate-300 rounded-lg focus:outline-none bg-white">
+            <option value="TODOS">Todos</option>
+            <option value="10 M3">10 M3</option>
+            <option value="15 M3">15 M3</option>
+            <option value="20 M3">20 M3</option>
+            <option value="25 M3">25 M3</option>
+            <option value="30 M3">30 M3</option>
+            <option value="40 M3">40 M3</option>
+            <option value="50 M3">50 M3</option>
+            <option value="60 M3">60 M3</option>
+            <option value="70 M3">70 M3</option>
+            <option value="80 M3">80 M3</option>
+            <option value="PLATAFORMA">PLATAFORMA</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-bold text-slate-600 mb-1">Servicio:</label>
+          <select id="filtroServicio" onchange="renderizarDisponibles()" class="w-full font-bold p-2 border border-slate-300 rounded-lg focus:outline-none bg-white">
+            <option value="TODOS">Todos</option>
+            <option value="LOCAL">LOCAL</option>
+            <option value="PROVINCIA">PROVINCIA</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- TABLA DE DISPONIBLES -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-50 text-slate-600 uppercase font-black border-y border-slate-200">
+            <tr>
+              <th class="p-3">Turno</th>
+              <th class="p-3">Fecha y Hora</th>
+              <th class="p-3">Servicio</th>
+              <th class="p-3">Placa / Empresa</th>
+              <th class="p-3">Cubicaje</th>
+              <th class="p-3">Conductor / Celular</th>
+              <th class="p-3 text-right">Acción</th>
+            </tr>
+          </thead>
+          <tbody id="tablaDisponiblesCuerpo" class="divide-y divide-slate-100">
+            <tr>
+              <td colspan="7" class="text-center py-6 text-slate-400 font-semibold">Cargando flota disponible...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODAL: TRANSFERIR A OTRO GRUPO -->
+  <div id="modalTransferir" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-4 text-xs">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <h3 class="font-black text-sm text-slate-900 flex items-center space-x-1.5">
+          <i class="fa-solid fa-arrow-right-arrow-left text-blue-600"></i>
+          <span>Transferir Turno</span>
+        </h3>
+        <button onclick="cerrarModalTransferir()" class="text-slate-400 hover:text-slate-600 text-base">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <p class="text-slate-600">Reasigna la unidad <strong id="txtPlacaTransferir" class="text-slate-900 font-black">---</strong> a otro equipo:</p>
+
+      <div>
+        <label class="block font-bold text-slate-700 mb-1">Destino:</label>
+        <select id="selectDestinoTransferir" class="w-full font-bold p-2.5 border-2 border-slate-300 rounded-xl focus:border-blue-600 focus:outline-none bg-white">
+          <option value="GRUPO_1">Programación: Grupo 1</option>
+          <option value="GRUPO_2">Programación: Grupo 2</option>
+          <option value="GRUPO_3">Programación: Grupo 3</option>
+          <option value="RAMPA_1">Control Rampa: Rampa 1</option>
+          <option value="RAMPA_2">Control Rampa: Rampa 2</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block font-bold text-slate-700 mb-1">Motivo obligatorio de transferencia:</label>
+        <input type="text" id="txtMotivoTransferir" placeholder="Ej: Cambio de ruta según despacho..." class="w-full p-2.5 border-2 border-slate-300 rounded-xl focus:border-blue-600 focus:outline-none">
+      </div>
+
+      <div class="flex space-x-2 pt-2">
+        <button onclick="cerrarModalTransferir()" class="w-1/2 py-2.5 rounded-xl border border-slate-300 font-bold text-slate-600">Cancelar</button>
+        <button onclick="confirmarTransferencia()" class="w-1/2 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 font-black text-white shadow">Transferir</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============================================================
+    // CONFIGURACIÓN DE IDENTIDAD SEGÚN CARPETA (MODULAR)
+    // ============================================================
+    // Detecta automáticamente si está en programacion-1, rampa-1, etc.
+    const rutaActual = window.location.pathname;
+    let MI_IDENTIDAD = "GRUPO_1";
+    let MI_NOMBRE_PANEL = "PANEL PROGRAMACIÓN: GRUPO 1";
+    let ES_RAMPA = false;
+
+    if (rutaActual.includes("programacion-2")) {
+      MI_IDENTIDAD = "GRUPO_2";
+      MI_NOMBRE_PANEL = "PANEL PROGRAMACIÓN: GRUPO 2";
+    } else if (rutaActual.includes("programacion-3")) {
+      MI_IDENTIDAD = "GRUPO_3";
+      MI_NOMBRE_PANEL = "PANEL PROGRAMACIÓN: GRUPO 3";
+    } else if (rutaActual.includes("rampa-1")) {
+      MI_IDENTIDAD = "RAMPA_1";
+      MI_NOMBRE_PANEL = "CONTROL OPERATIVO: RAMPA 1";
+      ES_RAMPA = true;
+    } else if (rutaActual.includes("rampa-2")) {
+      MI_IDENTIDAD = "RAMPA_2";
+      MI_NOMBRE_PANEL = "CONTROL OPERATIVO: RAMPA 2";
+      ES_RAMPA = true;
+    }
+
+    document.getElementById('txtTituloPanel').innerText = MI_NOMBRE_PANEL;
+    if (ES_RAMPA) {
+      document.getElementById('badgeRolIcono').className = "w-10 h-10 bg-indigo-600 text-white font-black rounded-xl flex items-center justify-center text-lg shadow";
+      document.getElementById('badgeRolIcono').innerHTML = `<i class="fa-solid fa-truck-fast"></i>`;
+    }
+
+    let todasLasUnidades = [];
+    let idTurnoTransferir = null;
+
+    window.onload = function() {
+      escucharTurnosEnVivo();
+    };
+
+    // ============================================================
+    // SINCRONIZACIÓN EN TIEMPO REAL
+    // ============================================================
+    function escucharTurnosEnVivo() {
+      db.collection('registros_turnos')
+        .onSnapshot((snap) => {
+          todasLasUnidades = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+          // Orden cronológico FIFO estricto
+          todasLasUnidades.sort((a, b) => {
+            const tA = a.fechaHoraRegistro ? (a.fechaHoraRegistro.toMillis ? a.fechaHoraRegistro.toMillis() : new Date(a.fechaHoraRegistro).getTime()) : 0;
+            const tB = b.fechaHoraRegistro ? (b.fechaHoraRegistro.toMillis ? b.fechaHoraRegistro.toMillis() : new Date(b.fechaHoraRegistro).getTime()) : 0;
+            return tA - tB;
+          });
+
+          renderizarMisAsignadas();
+          renderizarDisponibles();
+        }, (err) => {
+          console.error("Error escuchando turnos:", err);
+        });
+    }
+
+    // ============================================================
+    // RENDER 1: MIS UNIDADES ASIGNADAS (EN GESTIÓN)
+    // ============================================================
+    function renderizarMisAsignadas() {
+      const cont = document.getElementById('cuerpoMisAsignadas');
+      
+      // Filtrar unidades que están asignadas específicamente a MI_IDENTIDAD
+      const misUnidades = todasLasUnidades.filter(u => 
+        u.asignadoA === MI_IDENTIDAD && ['ASIGNADO', 'EN_BAHIA'].includes(u.estado)
+      );
+
+      document.getElementById('badgeContadorMisUnidades').innerText = `${misUnidades.length} Activas`;
+      document.getElementById('badgeMisAsignadasTotal').innerText = `Mis Unidades: ${misUnidades.length}`;
+
+      if (misUnidades.length === 0) {
+        cont.innerHTML = `<p class="text-slate-400 text-xs py-6 text-center col-span-full">No tienes unidades asignadas en este momento.</p>`;
+        return;
+      }
+
+      cont.innerHTML = misUnidades.map(u => `
+        <div class="border-2 ${u.estado === 'EN_BAHIA' ? 'border-amber-400 bg-amber-50/40' : 'border-blue-200 bg-blue-50/30'} rounded-2xl p-4 shadow-sm flex flex-col justify-between space-y-3">
+          <div>
+            <div class="flex items-center justify-between pb-2 border-b border-slate-200">
+              <span class="text-xs font-black px-2 py-0.5 rounded ${u.estado === 'EN_BAHIA' ? 'bg-amber-500 text-white animate-pulse' : 'bg-blue-600 text-white'}">
+                ${u.estado}
+              </span>
+              <span class="text-[11px] font-bold text-slate-500">${u.cubicaje} • ${u.servicio}</span>
+            </div>
+
+            <div class="mt-2">
+              <h3 class="text-xl font-black text-slate-900 tracking-wide">${u.placa}</h3>
+              <p class="text-[11px] text-slate-600 font-bold">${u.empresa || '-'}</p>
+            </div>
+
+            <div class="mt-2 text-xs text-slate-700 bg-white/70 p-2.5 rounded-xl border border-slate-200 space-y-0.5">
+              <p>Chofer: <strong class="text-slate-900">${u.conductor || '-'}</strong></p>
+              <p>Celular: <a href="tel:${u.telefono}" class="text-blue-700 font-black underline">${u.telefono || '-'}</a></p>
+            </div>
+          </div>
+
+          <!-- BOTONES DE ACCIÓN PARA MI UNIDAD -->
+          <div class="space-y-1.5 pt-2 border-t border-slate-200 text-xs font-bold">
+            
+            ${ES_RAMPA ? `
+              <!-- ACCIONES EXCLUSIVAS DE RAMPA -->
+              <div class="grid grid-cols-2 gap-1.5">
+                <button onclick="cambiarEstadoRampa('${u.id}', 'EN_BAHIA')" class="py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl shadow active:scale-95 flex items-center justify-center space-x-1">
+                  <i class="fa-solid fa-bell"></i>
+                  <span>A Bahía</span>
+                </button>
+                <button onclick="cambiarEstadoRampa('${u.id}', 'DESPACHADO')" class="py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow active:scale-95 flex items-center justify-center space-x-1">
+                  <i class="fa-solid fa-circle-check"></i>
+                  <span>Salida / Despacho</span>
+                </button>
+              </div>
+              <button onclick="rechazarEnRampa('${u.id}')" class="w-full py-1.5 bg-red-100 hover:bg-red-200 text-red-800 rounded-xl active:scale-95 text-[11px]">
+                <i class="fa-solid fa-triangle-exclamation mr-1"></i>Rechazo Físico en Rampa
+              </button>
+            ` : ''}
+
+            <!-- ACCIONES DE PROGRAMADOR (LIBERAR O TRANSFERIR) -->
+            <div class="grid grid-cols-2 gap-1.5">
+              <button onclick="abrirModalTransferir('${u.id}', '${u.placa}')" class="py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl active:scale-95 flex items-center justify-center space-x-1">
+                <i class="fa-solid fa-arrow-right-arrow-left"></i>
+                <span>Transferir</span>
+              </button>
+              <button onclick="liberarCargaCaida('${u.id}')" class="py-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-xl active:scale-95 flex items-center justify-center space-x-1" title="Si se canceló el pedido, regresa a la cola general en su puesto original">
+                <i class="fa-solid fa-rotate-left"></i>
+                <span>Carga Caída</span>
+              </button>
+            </div>
+
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ============================================================
+    // RENDER 2: COLA DE DISPONIBLES (PARA ASIGNAR)
+    // ============================================================
+    function renderizarDisponibles() {
+      const cuerpo = document.getElementById('tablaDisponiblesCuerpo');
+      const filtroTxt = (document.getElementById('filtroTexto')?.value || '').trim().toUpperCase();
+      const filtroCub = document.getElementById('filtroCubicaje')?.value || 'TODOS';
+      const filtroServ = document.getElementById('filtroServicio')?.value || 'TODOS';
+
+      // Solo mostramos unidades estrictamente DISPONIBLES
+      let disponibles = todasLasUnidades.filter(u => u.estado === 'DISPONIBLE');
+
+      if (filtroTxt) {
+        disponibles = disponibles.filter(u => 
+          (u.placa || '').toUpperCase().includes(filtroTxt) || 
+          (u.empresa || '').toUpperCase().includes(filtroTxt)
+        );
+      }
+      if (filtroCub !== 'TODOS') disponibles = disponibles.filter(u => u.cubicaje === filtroCub);
+      if (filtroServ !== 'TODOS') disponibles = disponibles.filter(u => u.servicio === filtroServ);
+
+      document.getElementById('badgeDisponiblesTotal').innerText = `${disponibles.length} Unidades Libres`;
+
+      if (disponibles.length === 0) {
+        cuerpo.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-400 font-semibold">No hay unidades disponibles en cola con estos filtros.</td></tr>`;
+        return;
+      }
+
+      cuerpo.innerHTML = disponibles.map((u, idx) => {
+        let fStr = '-';
+        if (u.fechaHoraRegistro) {
+          const d = u.fechaHoraRegistro.toMillis ? new Date(u.fechaHoraRegistro.toMillis()) : new Date(u.fechaHoraRegistro);
+          fStr = d.toLocaleString('es-PE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', hour12: true });
+        }
+
+        return `
+          <tr class="hover:bg-slate-50 transition-colors">
+            <td class="p-3 font-black text-slate-800">#${idx + 1}</td>
+            <td class="p-3 text-slate-600 whitespace-nowrap">${fStr}</td>
+            <td class="p-3">
+              <span class="font-bold px-2 py-0.5 rounded text-[10px] ${u.servicio === 'PROVINCIA' ? 'bg-indigo-100 text-indigo-800' : 'bg-emerald-100 text-emerald-800'}">
+                ${u.servicio}
+              </span>
+            </td>
+            <td class="p-3">
+              <span class="font-black text-slate-900 block">${u.placa}</span>
+              <span class="text-[10px] text-slate-500">${u.empresa || '-'}</span>
+            </td>
+            <td class="p-3 font-bold">${u.cubicaje || '-'}</td>
+            <td class="p-3">
+              <span class="font-bold text-slate-800 block">${u.conductor || '-'}</span>
+              <span class="text-slate-500 text-[11px]">${u.telefono || '-'}</span>
+            </td>
+            <td class="p-3 text-right">
+              <button onclick="tomarAsignacion('${u.id}', '${u.placa}')" class="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-black px-4 py-2 rounded-xl text-xs shadow flex items-center space-x-1.5 ml-auto">
+                <i class="fa-solid fa-thumbtack"></i>
+                <span>Asignar a Mi Grupo</span>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // ============================================================
+    // ACCIÓN 1: TOMAR ASIGNACIÓN CONCURRENTE
+    // ============================================================
+    async function tomarAsignacion(idTurno, placa) {
+      try {
+        const turno = todasLasUnidades.find(t => t.id === idTurno);
+        const bitacora = turno && turno.bitacora_eventos ? [...turno.bitacora_eventos] : [];
+
+        bitacora.push({
+          fecha: new Date().toISOString(),
+          usuario: MI_IDENTIDAD,
+          tipo: 'ASIGNACION_CARGA',
+          motivo: `Unidad tomada por ${MI_NOMBRE_PANEL}`
+        });
+
+        // Actualizamos Firestore: pasa a ASIGNADO y a mi grupo
+        await db.collection('registros_turnos').doc(idTurno).update({
+          estado: 'ASIGNADO',
+          asignadoA: MI_IDENTIDAD,
+          fechaHoraAsignado: firebase.firestore.FieldValue.serverTimestamp(),
+          bitacora_eventos: bitacora
+        });
+
+      } catch (e) {
+        alert("Error al tomar asignación: " + e.message);
+      }
+    }
+
+    // ============================================================
+    // ACCIÓN 2: LIBERAR POR CARGA CAÍDA (CONSERVA PUESTO FIFO)
+    // ============================================================
+    async function liberarCargaCaida(idTurno) {
+      const motivo = prompt("¿Motivo de la cancelación de carga?", "Pedido cancelado por cliente / Cambio de programación");
+      if (!motivo) return;
+
+      try {
+        const turno = todasLasUnidades.find(t => t.id === idTurno);
+        const bitacora = turno && turno.bitacora_eventos ? [...turno.bitacora_eventos] : [];
+
+        bitacora.push({
+          fecha: new Date().toISOString(),
+          usuario: MI_IDENTIDAD,
+          tipo: 'LIBERACION_CARGA_CAIDA',
+          motivo: `Carga cancelada: ${motivo}. Retorna a DISPONIBLE con fecha original intacta.`
+        });
+
+        // Regresa a DISPONIBLE, quitando asignadoA pero MANTENIENDO fechaHoraRegistro
+        await db.collection('registros_turnos').doc(idTurno).update({
+          estado: 'DISPONIBLE',
+          asignadoA: null,
+          fechaHoraAsignado: null,
+          bitacora_eventos: bitacora
+        });
+
+        alert("Unidad reincorporada a la cola general en su puesto original.");
+      } catch (e) {
+        alert("Error al liberar unidad: " + e.message);
+      }
+    }
+
+    // ============================================================
+    // ACCIÓN 3: TRANSFERIR A OTRO GRUPO
+    // ============================================================
+    function abrirModalTransferir(id, placa) {
+      idTurnoTransferir = id;
+      document.getElementById('txtPlacaTransferir').innerText = placa;
+      document.getElementById('txtMotivoTransferir').value = '';
+      document.getElementById('modalTransferir').classList.remove('hidden');
+    }
+
+    function cerrarModalTransferir() {
+      idTurnoTransferir = null;
+      document.getElementById('modalTransferir').classList.add('hidden');
+    }
+
+    async function confirmarTransferencia() {
+      const destino = document.getElementById('selectDestinoTransferir').value;
+      const motivo = document.getElementById('txtMotivoTransferir').value.trim();
+
+      if (!motivo) {
+        alert("Debes escribir un motivo obligatorio para la transferencia.");
+        return;
+      }
+
+      try {
+        const turno = todasLasUnidades.find(t => t.id === idTurnoTransferir);
+        const bitacora = turno && turno.bitacora_eventos ? [...turno.bitacora_eventos] : [];
+
+        bitacora.push({
+          fecha: new Date().toISOString(),
+          usuario: MI_IDENTIDAD,
+          tipo: 'TRANSFERENCIA_GRUPO',
+          motivo: `Transferido de ${MI_IDENTIDAD} hacia ${destino}. Motivo: ${motivo}`
+        });
+
+        await db.collection('registros_turnos').doc(idTurnoTransferir).update({
+          asignadoA: destino,
+          bitacora_eventos: bitacora
+        });
+
+        cerrarModalTransferir();
+      } catch (e) {
+        alert("Error al transferir: " + e.message);
+      }
+    }
+
+    // ============================================================
+    // ACCIONES EXCLUSIVAS DE RAMPA (BAHÍA, SALIDA, RECHAZO)
+    // ============================================================
+    async function cambiarEstadoRampa(idTurno, nuevoEstado) {
+      try {
+        const turno = todasLasUnidades.find(t => t.id === idTurno);
+        const bitacora = turno && turno.bitacora_eventos ? [...turno.bitacora_eventos] : [];
+
+        bitacora.push({
+          fecha: new Date().toISOString(),
+          usuario: MI_IDENTIDAD,
+          tipo: nuevoEstado === 'EN_BAHIA' ? 'LLAMADO_A_BAHIA' : 'DESPACHO_SALIDA',
+          motivo: nuevoEstado === 'EN_BAHIA' ? 'Camión llamado a rampa para inicio de carga' : 'Carga completada, salida autorizada'
+        });
+
+        await db.collection('registros_turnos').doc(idTurno).update({
+          estado: nuevoEstado,
+          bitacora_eventos: bitacora
+        });
+
+      } catch (e) {
+        alert("Error al actualizar rampa: " + e.message);
+      }
+    }
+
+    async function rechazarEnRampa(idTurno) {
+      const motivo = prompt("Motivo del rechazo físico en rampa (Piso, carpa rota, sin tacos, SSOMA):", "Piso de carreta en mal estado");
+      if (!motivo) return;
+
+      try {
+        const turno = todasLasUnidades.find(t => t.id === idTurno);
+        const bitacora = turno && turno.bitacora_eventos ? [...turno.bitacora_eventos] : [];
+
+        bitacora.push({
+          fecha: new Date().toISOString(),
+          usuario: MI_IDENTIDAD,
+          tipo: 'RECHAZO_FISICO_RAMPA',
+          motivo: `Rechazado en rampa: ${motivo}`
+        });
+
+        await db.collection('registros_turnos').doc(idTurno).update({
+          estado: 'RECHAZADO_RAMPA',
+          bitacora_eventos: bitacora
+        });
+
+        alert("Unidad marcada como RECHAZADO EN RAMPA.");
+      } catch (e) {
+        alert("Error al registrar rechazo: " + e.message);
+      }
+    }
+  </script>
+</body>
+</html>
