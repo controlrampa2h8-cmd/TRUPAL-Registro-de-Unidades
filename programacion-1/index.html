@@ -23,7 +23,7 @@
   <header class="bg-blue-900 text-white p-4 shadow-lg sticky top-0 z-40 border-b border-blue-800">
     <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-3">
       <div class="flex items-center space-x-3">
-        <div id="badgeRolIcono" class="w-10 h-10 bg-blue-500 text-white font-black rounded-xl flex items-center justify-center text-lg shadow">
+        <div class="w-10 h-10 bg-blue-500 text-white font-black rounded-xl flex items-center justify-center text-lg shadow">
           <i class="fa-solid fa-clipboard-list"></i>
         </div>
         <div>
@@ -36,18 +36,10 @@
           <p class="text-xs text-blue-200">Cochera TRUPAL Huachipa 2 • Despacho de Carga</p>
         </div>
       </div>
-
-      <!-- BOTÓN PARA ABRIR SUBVENTANA DE MIS UNIDADES ASIGNADAS -->
-      <div class="flex items-center space-x-2">
-        <button onclick="abrirModalMisUnidades()" class="bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 font-black px-4 py-2 rounded-xl text-xs shadow-md flex items-center space-x-2 transition-all">
-          <i class="fa-solid fa-truck-ramp-box"></i>
-          <span id="btnMisAsignadasTexto">Mis Unidades Asignadas: 0</span>
-        </button>
-      </div>
     </div>
   </header>
 
-  <!-- CONTENEDOR PRINCIPAL: SOLO FLOTA DISPONIBLE EN COCHERA -->
+  <!-- CONTENEDOR PRINCIPAL -->
   <main class="max-w-7xl mx-auto p-4 md:p-6 space-y-4">
 
     <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
@@ -57,23 +49,23 @@
             <i class="fa-solid fa-truck text-emerald-600"></i>
             <span>Flota Disponible en Cochera (Orden FIFO)</span>
           </h2>
-          <p class="text-xs text-slate-500 mt-0.5">Unidades esperando asignación de carga en patio en orden estricto de llegada.</p>
+          <p class="text-xs text-slate-500 mt-0.5">Solo el primer turno disponible de cada capacidad y servicio está habilitado para programar.</p>
         </div>
         <span id="badgeDisponiblesTotal" class="text-xs font-black bg-emerald-50 text-emerald-800 px-3 py-1 rounded-full w-fit">
-          0 Unidades Libres
+          0 Unidades en Cola
         </span>
       </div>
 
-      <!-- BARRA DE FILTROS CRUZADOS (INCLUYE INDUCCIÓN DE CLIENTE Y CAPACIDAD) -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs">
+      <!-- BARRA DE FILTROS + BOTÓN PROGRAMAR POR INDUCCIÓN -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs items-end">
         <div>
           <label class="block font-bold text-slate-600 mb-1">Buscar Placa / Empresa:</label>
-          <input type="text" id="filtroTexto" oninput="renderizarDisponibles()" placeholder="Filtrar por texto..." class="w-full uppercase font-bold p-2 border border-slate-300 rounded-lg focus:outline-none bg-white">
+          <input type="text" id="filtroTexto" oninput="renderizarTabla()" placeholder="FILTRAR POR TEXTO..." class="w-full uppercase font-bold p-2.5 border border-slate-300 rounded-lg focus:outline-none bg-white">
         </div>
 
         <div>
           <label class="block font-bold text-slate-600 mb-1">Capacidad / Cubicaje:</label>
-          <select id="filtroCubicaje" onchange="renderizarDisponibles()" class="w-full font-bold p-2 border border-slate-300 rounded-lg focus:outline-none bg-white">
+          <select id="filtroCubicaje" onchange="renderizarTabla()" class="w-full font-bold p-2.5 border border-slate-300 rounded-lg focus:outline-none bg-white">
             <option value="TODOS">Todos</option>
             <option value="10 M3">10 M3</option>
             <option value="15 M3">15 M3</option>
@@ -91,34 +83,23 @@
 
         <div>
           <label class="block font-bold text-slate-600 mb-1">Servicio:</label>
-          <select id="filtroServicio" onchange="renderizarDisponibles()" class="w-full font-bold p-2 border border-slate-300 rounded-lg focus:outline-none bg-white">
+          <select id="filtroServicio" onchange="renderizarTabla()" class="w-full font-bold p-2.5 border border-slate-300 rounded-lg focus:outline-none bg-white">
             <option value="TODOS">Todos</option>
             <option value="LOCAL">LOCAL</option>
             <option value="PROVINCIA">PROVINCIA</option>
           </select>
         </div>
 
-        <!-- FILTRO DE CLIENTE QUE PIDE INDUCCIÓN -->
-        <div class="bg-indigo-50/70 p-1.5 rounded-lg border border-indigo-200">
-          <label class="block font-black text-indigo-950 mb-1 flex items-center justify-between">
-            <span>Cliente con Inducción:</span>
-            <i class="fa-solid fa-id-badge text-indigo-600"></i>
-          </label>
-          <select id="filtroClienteInduccion" onchange="renderizarDisponibles()" class="w-full font-bold p-1.5 border border-indigo-300 rounded-lg focus:outline-none bg-white text-indigo-900">
-            <option value="TODOS">Cualquier Chofer (Sin filtro inducción)</option>
-            <option value="ALICORP">ALICORP</option>
-            <option value="BACKUS">BACKUS</option>
-            <option value="KIMBERLY">KIMBERLY CLARK</option>
-            <option value="NESTLE">NESTLE</option>
-            <option value="LINDLEY">ARCA CONTINENTAL LINDLEY</option>
-            <option value="TRUPAL">TRUPAL (Planta)</option>
-            <option value="GLORIA">GLORIA</option>
-            <option value="SAN_FERNANDO">SAN FERNANDO</option>
-          </select>
+        <!-- BOTÓN DE ACCIÓN QUE REEMPLAZA AL FILTRO DE INDUCCIÓN -->
+        <div>
+          <button onclick="abrirModalInduccion()" class="w-full bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-black p-2.5 rounded-xl shadow flex items-center justify-center space-x-2 transition-all">
+            <i class="fa-solid fa-id-badge text-sm"></i>
+            <span>PROGRAMAR POR INDUCCIÓN</span>
+          </button>
         </div>
       </div>
 
-      <!-- TABLA DE DISPONIBLES EN ORDEN FIFO -->
+      <!-- TABLA DE FLOTA EN ORDEN FIFO -->
       <div class="overflow-x-auto">
         <table class="w-full text-left text-xs">
           <thead class="bg-slate-50 text-slate-600 uppercase font-black border-y border-slate-200">
@@ -129,12 +110,13 @@
               <th class="p-3">Placa / Empresa</th>
               <th class="p-3">Cubicaje</th>
               <th class="p-3">Conductor / Inducciones</th>
+              <th class="p-3">Estado</th>
               <th class="p-3 text-right">Acción</th>
             </tr>
           </thead>
-          <tbody id="tablaDisponiblesCuerpo" class="divide-y divide-slate-100">
+          <tbody id="tablaCuerpo" class="divide-y divide-slate-100">
             <tr>
-              <td colspan="7" class="text-center py-6 text-slate-400 font-semibold">Cargando flota disponible...</td>
+              <td colspan="8" class="text-center py-6 text-slate-400 font-semibold">Cargando flota en patio...</td>
             </tr>
           </tbody>
         </table>
@@ -144,72 +126,73 @@
   </main>
 
   <!-- ============================================================ -->
-  <!-- SUBVENTANA (MODAL): UNIDADES ASIGNADAS A MI GRUPO           -->
+  <!-- MODAL: PROGRAMAR POR INDUCCIÓN (BÚSQUEDA AUTOMÁTICA FIFO)    -->
   <!-- ============================================================ -->
-  <div id="modalMisUnidades" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-4xl w-full p-5 shadow-2xl flex flex-col max-h-[88vh] space-y-4">
+  <div id="modalInduccion" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl space-y-4 text-xs">
       <div class="flex items-center justify-between pb-3 border-b border-slate-100">
         <div class="flex items-center space-x-2">
-          <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold text-lg">
-            <i class="fa-solid fa-truck-ramp-box"></i>
+          <div class="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-base">
+            <i class="fa-solid fa-id-badge"></i>
           </div>
           <div>
-            <h3 class="font-black text-sm text-slate-900 uppercase">Unidades Asignadas a Mi Grupo</h3>
-            <p id="subtituloMisUnidadesModal" class="text-[11px] text-slate-500 font-semibold">Gestión de unidades tomadas para carga</p>
+            <h3 class="font-black text-sm text-slate-900 uppercase">Programar por Inducción</h3>
+            <p class="text-[11px] text-slate-500 font-semibold">El sistema elegirá el turno más próximo que cumpla las condiciones.</p>
           </div>
         </div>
-        <button onclick="cerrarModalMisUnidades()" class="text-slate-400 hover:text-slate-600 text-lg">
+        <button onclick="cerrarModalInduccion()" class="text-slate-400 hover:text-slate-600 text-lg">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
 
-      <!-- LISTADO DE TARJETAS ASIGNADAS -->
-      <div id="cuerpoMisAsignadasModal" class="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto pr-1 flex-1 text-xs">
-        <!-- Render dinámico -->
-      </div>
+      <div class="space-y-3">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">1. Selecciona el Cliente que exige inducción:</label>
+          <select id="selectClienteInduccion" onchange="previsualizarUnidadInduccion()" class="w-full font-bold p-3 border-2 border-slate-300 rounded-xl focus:border-indigo-600 focus:outline-none bg-white">
+            <option value="">-- Elige un cliente --</option>
+          </select>
+        </div>
 
-      <div class="pt-3 border-t border-slate-100 text-right">
-        <button onclick="cerrarModalMisUnidades()" class="py-2 px-5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow">
-          Cerrar
-        </button>
-      </div>
-    </div>
-  </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">2. Capacidad requerida:</label>
+            <select id="selectCapacidadInduccion" onchange="previsualizarUnidadInduccion()" class="w-full font-bold p-3 border-2 border-slate-300 rounded-xl focus:border-indigo-600 focus:outline-none bg-white">
+              <option value="80 M3">80 M3</option>
+              <option value="50 M3">50 M3</option>
+              <option value="70 M3">70 M3</option>
+              <option value="60 M3">60 M3</option>
+              <option value="40 M3">40 M3</option>
+              <option value="30 M3">30 M3</option>
+              <option value="25 M3">25 M3</option>
+              <option value="20 M3">20 M3</option>
+              <option value="15 M3">15 M3</option>
+              <option value="10 M3">10 M3</option>
+              <option value="PLATAFORMA">PLATAFORMA</option>
+            </select>
+          </div>
 
-  <!-- MODAL: TRANSFERIR A OTRO GRUPO -->
-  <div id="modalTransferir" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-4 text-xs">
-      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-        <h3 class="font-black text-sm text-slate-900 flex items-center space-x-1.5">
-          <i class="fa-solid fa-arrow-right-arrow-left text-blue-600"></i>
-          <span>Transferir Turno</span>
-        </h3>
-        <button onclick="cerrarModalTransferir()" class="text-slate-400 hover:text-slate-600 text-base">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">3. Servicio:</label>
+            <select id="selectServicioInduccion" onchange="previsualizarUnidadInduccion()" class="w-full font-bold p-3 border-2 border-slate-300 rounded-xl focus:border-indigo-600 focus:outline-none bg-white">
+              <option value="LOCAL">LOCAL</option>
+              <option value="PROVINCIA">PROVINCIA</option>
+            </select>
+          </div>
+        </div>
 
-      <p class="text-slate-600">Reasigna la unidad <strong id="txtPlacaTransferir" class="text-slate-900 font-black">---</strong> a otro equipo:</p>
-
-      <div>
-        <label class="block font-bold text-slate-700 mb-1">Destino:</label>
-        <select id="selectDestinoTransferir" class="w-full font-bold p-2.5 border-2 border-slate-300 rounded-xl focus:border-blue-600 focus:outline-none bg-white">
-          <option value="GRUPO_1">Programación: Grupo 1</option>
-          <option value="GRUPO_2">Programación: Grupo 2</option>
-          <option value="GRUPO_3">Programación: Grupo 3</option>
-          <option value="RAMPA_1">Control Rampa: Rampa 1</option>
-          <option value="RAMPA_2">Control Rampa: Rampa 2</option>
-        </select>
-      </div>
-
-      <div>
-        <label class="block font-bold text-slate-700 mb-1">Motivo obligatorio de transferencia:</label>
-        <input type="text" id="txtMotivoTransferir" placeholder="Ej: Cambio de ruta según despacho..." class="w-full p-2.5 border-2 border-slate-300 rounded-xl focus:border-blue-600 focus:outline-none">
+        <!-- PREVISUALIZACIÓN DE LA UNIDAD ELEGIDA AUTOMÁTICAMENTE -->
+        <div id="cajaPreviewInduccion" class="p-3 rounded-xl border border-slate-200 bg-slate-50">
+          <p class="text-slate-400 text-center font-semibold">Selecciona un cliente para buscar unidad disponible...</p>
+        </div>
       </div>
 
       <div class="flex space-x-2 pt-2">
-        <button onclick="cerrarModalTransferir()" class="w-1/2 py-2.5 rounded-xl border border-slate-300 font-bold text-slate-600">Cancelar</button>
-        <button onclick="confirmarTransferencia()" class="w-1/2 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 font-black text-white shadow">Transferir</button>
+        <button onclick="cerrarModalInduccion()" class="w-1/2 py-2.5 rounded-xl border border-slate-300 font-bold text-slate-600">
+          Cancelar
+        </button>
+        <button id="btnConfirmarInduccion" disabled onclick="ejecutarProgramacionInduccion()" class="w-1/2 py-2.5 rounded-xl bg-indigo-600 disabled:bg-slate-300 disabled:text-slate-400 hover:bg-indigo-700 font-black text-white shadow">
+          Confirmar Programación
+        </button>
       </div>
     </div>
   </div>
@@ -231,7 +214,8 @@
 
     let todasLasUnidades = [];
     let mapaConductores = {};
-    let idTurnoTransferir = null;
+    let listaClientesUnicos = new Set();
+    let unidadCandidataInduccion = null;
 
     window.onload = async function() {
       await cargarMaestroConductores();
@@ -239,13 +223,22 @@
     };
 
     // ============================================================
-    // CARGAR INDUCCIONES DE CONDUCTORES
+    // CARGAR INDUCCIONES DE CONDUCTORES Y EXTRAER CLIENTES
     // ============================================================
     async function cargarMaestroConductores() {
       try {
         const snap = await db.collection('conductores').get();
+        listaClientesUnicos.clear();
+
         snap.forEach(doc => {
-          mapaConductores[doc.id] = doc.data(); // doc.id es la licencia
+          const data = doc.data();
+          mapaConductores[doc.id] = data;
+
+          if (Array.isArray(data.inducciones_clientes)) {
+            data.inducciones_clientes.forEach(c => {
+              if (c && c.trim()) listaClientesUnicos.add(c.trim().toUpperCase());
+            });
+          }
         });
       } catch (e) {
         console.error("Error al cargar maestro conductores:", e);
@@ -267,83 +260,113 @@
             return tA - tB;
           });
 
-          actualizarContadorMisUnidades();
-          renderizarDisponibles();
-          renderizarModalMisUnidades();
+          renderizarTabla();
         }, (err) => {
           console.error("Error escuchando turnos:", err);
         });
     }
 
-    function actualizarContadorMisUnidades() {
-      const misUnidades = todasLasUnidades.filter(u => 
-        u.asignadoA === MI_IDENTIDAD && ['ASIGNADO', 'EN_BAHIA'].includes(u.estado)
-      );
-      document.getElementById('btnMisAsignadasTexto').innerText = `Mis Unidades Asignadas: ${misUnidades.length}`;
-    }
-
     // ============================================================
-    // RENDER: COLA DE DISPONIBLES CON FILTROS E INDUCCIÓN
+    // RENDER: TABLA CON BLOQUEO FIFO POR CAPACIDAD + SERVICIO
     // ============================================================
-    function renderizarDisponibles() {
-      const cuerpo = document.getElementById('tablaDisponiblesCuerpo');
+    function renderizarTabla() {
+      const cuerpo = document.getElementById('tablaCuerpo');
       const filtroTxt = (document.getElementById('filtroTexto')?.value || '').trim().toUpperCase();
       const filtroCub = document.getElementById('filtroCubicaje')?.value || 'TODOS';
       const filtroServ = document.getElementById('filtroServicio')?.value || 'TODOS';
-      const filtroInduccion = document.getElementById('filtroClienteInduccion')?.value || 'TODOS';
 
-      let disponibles = todasLasUnidades.filter(u => u.estado === 'DISPONIBLE');
+      // Mostramos en esta vista los estados activos de programación
+      const estadosEnTabla = ['DISPONIBLE', 'PROGRAMADO', 'PROGRAMADO POR INDUCCIÓN'];
+      let listaCola = todasLasUnidades.filter(u => estadosEnTabla.includes(u.estado));
 
-      // 1. Filtro texto (Placa o Empresa)
+      // 1. IDENTIFICAR EL PRIMER REGISTRO "DISPONIBLE" DE CADA COMBINACIÓN (CAPACIDAD + SERVICIO)
+      // Solo esos primeros registros estarán habilitados para ejecutar la acción PROGRAMAR
+      const primerosDisponiblesPorGrupo = new Set();
+      const combinacionesVistas = new Set();
+
+      listaCola.forEach(u => {
+        if (u.estado === 'DISPONIBLE') {
+          const llave = `${u.cubicaje || ''}|${u.servicio || ''}`;
+          if (!combinacionesVistas.has(llave)) {
+            combinacionesVistas.add(llave);
+            primerosDisponiblesPorGrupo.add(u.id);
+          }
+        }
+      });
+
+      // Aplicar filtros visuales
+      let filtrados = listaCola;
       if (filtroTxt) {
-        disponibles = disponibles.filter(u => 
+        filtrados = filtrados.filter(u => 
           (u.placa || '').toUpperCase().includes(filtroTxt) || 
           (u.empresa || '').toUpperCase().includes(filtroTxt)
         );
       }
+      if (filtroCub !== 'TODOS') filtrados = filtrados.filter(u => u.cubicaje === filtroCub);
+      if (filtroServ !== 'TODOS') filtrados = filtrados.filter(u => u.servicio === filtroServ);
 
-      // 2. Filtro Cubicaje
-      if (filtroCub !== 'TODOS') disponibles = disponibles.filter(u => u.cubicaje === filtroCub);
+      document.getElementById('badgeDisponiblesTotal').innerText = `${filtrados.length} Unidades en Cola`;
 
-      // 3. Filtro Servicio
-      if (filtroServ !== 'TODOS') disponibles = disponibles.filter(u => u.servicio === filtroServ);
-
-      // 4. Filtro Inducción de Cliente (Consulta brevete)
-      if (filtroInduccion !== 'TODOS') {
-        disponibles = disponibles.filter(u => {
-          const lic = u.licencia;
-          const datosChofer = mapaConductores[lic];
-          if (!datosChofer || !datosChofer.inducciones_clientes) return false;
-          
-          return datosChofer.inducciones_clientes.some(ind => 
-            ind.toUpperCase().includes(filtroInduccion)
-          );
-        });
-      }
-
-      document.getElementById('badgeDisponiblesTotal').innerText = `${disponibles.length} Unidades Libres`;
-
-      if (disponibles.length === 0) {
-        cuerpo.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-400 font-semibold">No hay unidades disponibles con los filtros seleccionados.</td></tr>`;
+      if (filtrados.length === 0) {
+        cuerpo.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-slate-400 font-semibold">No hay unidades en cola con estos filtros.</td></tr>`;
         return;
       }
 
-      cuerpo.innerHTML = disponibles.map((u, idx) => {
+      cuerpo.innerHTML = filtrados.map((u, idx) => {
         let fStr = '-';
         if (u.fechaHoraRegistro) {
           const d = u.fechaHoraRegistro.toMillis ? new Date(u.fechaHoraRegistro.toMillis()) : new Date(u.fechaHoraRegistro);
           fStr = d.toLocaleString('es-PE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', hour12: true });
         }
 
-        // Obtener inducciones del chofer para mostrarlas visualmente
+        // Inducciones del chofer
         const datosChofer = mapaConductores[u.licencia];
         const inducciones = (datosChofer && datosChofer.inducciones_clientes) ? datosChofer.inducciones_clientes : [];
         const chipsInduccion = inducciones.map(ind => 
-          `<span class="bg-indigo-100 text-indigo-800 text-[9px] font-black px-1.5 py-0.2 rounded">${ind}</span>`
+          `<span class="bg-indigo-100 text-indigo-800 text-[9px] font-black px-1.5 py-0.5 rounded">${ind}</span>`
         ).join(' ');
 
+        // Estilo de la insignia de ESTADO
+        let badgeEstadoHtml = '';
+        if (u.estado === 'DISPONIBLE') {
+          badgeEstadoHtml = `<span class="font-black text-[10px] px-2.5 py-1 rounded-md bg-emerald-100 text-emerald-800 uppercase">DISPONIBLE</span>`;
+        } else if (u.estado === 'PROGRAMADO') {
+          badgeEstadoHtml = `<span class="font-black text-[10px] px-2.5 py-1 rounded-md bg-blue-100 text-blue-800 uppercase">PROGRAMADO (${u.asignadoA || ''})</span>`;
+        } else if (u.estado === 'PROGRAMADO POR INDUCCIÓN') {
+          badgeEstadoHtml = `<span class="font-black text-[10px] px-2.5 py-1 rounded-md bg-indigo-100 text-indigo-800 uppercase">PROGRAMADO POR INDUCCIÓN (${u.clienteInduccion || ''})</span>`;
+        }
+
+        // Lógica de botones en columna ACCIÓN
+        let botonAccionHtml = '';
+        if (u.estado === 'DISPONIBLE') {
+          const esElPrimero = primerosDisponiblesPorGrupo.has(u.id);
+          if (esElPrimero) {
+            botonAccionHtml = `
+              <button onclick="accionProgramar('${u.id}', '${u.placa}')" class="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-black px-4 py-2 rounded-xl text-xs shadow inline-flex items-center space-x-1.5">
+                <i class="fa-solid fa-check"></i>
+                <span>PROGRAMAR</span>
+              </button>
+            `;
+          } else {
+            botonAccionHtml = `
+              <button disabled title="Debes programar primero al turno anterior de esta capacidad y servicio" class="bg-slate-200 text-slate-400 cursor-not-allowed font-black px-4 py-2 rounded-xl text-xs inline-flex items-center space-x-1.5">
+                <i class="fa-solid fa-lock"></i>
+                <span>EN ESPERA FIFO</span>
+              </button>
+            `;
+          }
+        } else {
+          // Si ya está PROGRAMADO o PROGRAMADO POR INDUCCIÓN -> Habilitar MERCADERÍA NO VA
+          botonAccionHtml = `
+            <button onclick="accionMercaderiaNoVa('${u.id}', '${u.placa}')" class="bg-amber-500 hover:bg-amber-600 active:scale-95 text-white font-black px-3.5 py-2 rounded-xl text-xs shadow inline-flex items-center space-x-1.5">
+              <i class="fa-solid fa-rotate-left"></i>
+              <span>MERCADERÍA NO VA</span>
+            </button>
+          `;
+        }
+
         return `
-          <tr class="hover:bg-slate-50 transition-colors">
+          <tr class="hover:bg-slate-50 transition-colors ${u.estado !== 'DISPONIBLE' ? 'bg-blue-50/20' : ''}">
             <td class="p-3 font-black text-slate-800">#${idx + 1}</td>
             <td class="p-3 text-slate-600 whitespace-nowrap">${fStr}</td>
             <td class="p-3">
@@ -359,81 +382,19 @@
             <td class="p-3">
               <span class="font-bold text-slate-800 block">${u.conductor || '-'}</span>
               <span class="text-slate-500 text-[11px] block">${u.telefono || '-'}</span>
-              <div class="flex flex-wrap gap-1 mt-1">${chipsInduccion || '<span class="text-[10px] text-slate-400">Sin inducciones registradas</span>'}</div>
+              <div class="flex flex-wrap gap-1 mt-1">${chipsInduccion || '<span class="text-[10px] text-slate-400">Sin inducciones</span>'}</div>
             </td>
-            <td class="p-3 text-right">
-              <button onclick="tomarAsignacion('${u.id}', '${u.placa}')" class="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-black px-4 py-2 rounded-xl text-xs shadow flex items-center space-x-1.5 ml-auto">
-                <i class="fa-solid fa-thumbtack"></i>
-                <span>Asignar a Mi Grupo</span>
-              </button>
-            </td>
+            <td class="p-3 whitespace-nowrap">${badgeEstadoHtml}</td>
+            <td class="p-3 text-right whitespace-nowrap">${botonAccionHtml}</td>
           </tr>
         `;
       }).join('');
     }
 
     // ============================================================
-    // MODAL DE MIS UNIDADES ASIGNADAS
+    // ACCIÓN 1: PROGRAMAR (ESTADO -> PROGRAMADO)
     // ============================================================
-    function abrirModalMisUnidades() {
-      renderizarModalMisUnidades();
-      document.getElementById('modalMisUnidades').classList.remove('hidden');
-    }
-
-    function cerrarModalMisUnidades() {
-      document.getElementById('modalMisUnidades').classList.add('hidden');
-    }
-
-    function renderizarModalMisUnidades() {
-      const cont = document.getElementById('cuerpoMisAsignadasModal');
-      const misUnidades = todasLasUnidades.filter(u => 
-        u.asignadoA === MI_IDENTIDAD && ['ASIGNADO', 'EN_BAHIA'].includes(u.estado)
-      );
-
-      if (misUnidades.length === 0) {
-        cont.innerHTML = `<p class="text-slate-400 text-xs py-8 text-center col-span-full">No tienes unidades asignadas a tu grupo en este momento.</p>`;
-        return;
-      }
-
-      cont.innerHTML = misUnidades.map(u => `
-        <div class="border-2 border-blue-200 bg-blue-50/40 rounded-2xl p-4 shadow-sm flex flex-col justify-between space-y-3">
-          <div>
-            <div class="flex items-center justify-between pb-2 border-b border-slate-200">
-              <span class="text-xs font-black px-2 py-0.5 rounded bg-blue-600 text-white">
-                ${u.estado}
-              </span>
-              <span class="text-[11px] font-bold text-slate-500">${u.cubicaje} • ${u.servicio}</span>
-            </div>
-
-            <div class="mt-2">
-              <h3 class="text-xl font-black text-slate-900 tracking-wide">${u.placa}</h3>
-              <p class="text-[11px] text-slate-600 font-bold">${u.empresa || '-'}</p>
-            </div>
-
-            <div class="mt-2 text-xs text-slate-700 bg-white p-2.5 rounded-xl border border-slate-200 space-y-0.5">
-              <p>Conductor: <strong class="text-slate-900">${u.conductor || '-'}</strong></p>
-              <p>Celular: <a href="tel:${u.telefono}" class="text-blue-700 font-black underline">${u.telefono || '-'}</a></p>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-200 text-xs font-bold">
-            <button onclick="abrirModalTransferir('${u.id}', '${u.placa}')" class="py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl active:scale-95 flex items-center justify-center space-x-1">
-              <i class="fa-solid fa-arrow-right-arrow-left"></i>
-              <span>Transferir</span>
-            </button>
-            <button onclick="liberarCargaCaida('${u.id}')" class="py-2.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-xl active:scale-95 flex items-center justify-center space-x-1" title="Si se cae el pedido, retorna a la cola general en su puesto original">
-              <i class="fa-solid fa-rotate-left"></i>
-              <span>Carga Caída</span>
-            </button>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    // ============================================================
-    // ACCIONES: TOMAR, LIBERAR Y TRANSFERIR
-    // ============================================================
-    async function tomarAsignacion(idTurno, placa) {
+    async function accionProgramar(idTurno, placa) {
       try {
         const turno = todasLasUnidades.find(t => t.id === idTurno);
         const bitacora = turno && turno.bitacora_eventos ? [...turno.bitacora_eventos] : [];
@@ -441,25 +402,26 @@
         bitacora.push({
           fecha: new Date().toISOString(),
           usuario: MI_IDENTIDAD,
-          tipo: 'ASIGNACION_CARGA',
-          motivo: `Unidad tomada por ${MI_NOMBRE_PANEL}`
+          tipo: 'PROGRAMADO',
+          motivo: `Unidad programada por ${MI_NOMBRE_PANEL}`
         });
 
         await db.collection('registros_turnos').doc(idTurno).update({
-          estado: 'ASIGNADO',
+          estado: 'PROGRAMADO',
           asignadoA: MI_IDENTIDAD,
           fechaHoraAsignado: firebase.firestore.FieldValue.serverTimestamp(),
           bitacora_eventos: bitacora
         });
-
       } catch (e) {
-        alert("Error al tomar asignación: " + e.message);
+        alert("Error al programar unidad: " + e.message);
       }
     }
 
-    async function liberarCargaCaida(idTurno) {
-      const motivo = prompt("¿Motivo de la cancelación de carga?", "Pedido cancelado por cliente / Cambio de programación");
-      if (!motivo) return;
+    // ============================================================
+    // ACCIÓN 2: MERCADERÍA NO VA (ESTADO -> DISPONIBLE)
+    // ============================================================
+    async function accionMercaderiaNoVa(idTurno, placa) {
+      if (!confirm(`¿Confirmas que la mercadería para la placa ${placa} NO VA y debe volver a estado DISPONIBLE?`)) return;
 
       try {
         const turno = todasLasUnidades.find(t => t.id === idTurno);
@@ -468,63 +430,128 @@
         bitacora.push({
           fecha: new Date().toISOString(),
           usuario: MI_IDENTIDAD,
-          tipo: 'LIBERACION_CARGA_CAIDA',
-          motivo: `Carga cancelada: ${motivo}. Retorna a DISPONIBLE con fecha original intacta.`
+          tipo: 'MERCADERIA_NO_VA',
+          motivo: `Mercadería cancelada por ${MI_NOMBRE_PANEL}. Unidad retorna a estado DISPONIBLE en su turno original.`
         });
 
         await db.collection('registros_turnos').doc(idTurno).update({
           estado: 'DISPONIBLE',
           asignadoA: null,
+          clienteInduccion: null,
           fechaHoraAsignado: null,
           bitacora_eventos: bitacora
         });
-
-        alert("Unidad reincorporada a la cola general en su puesto original.");
       } catch (e) {
         alert("Error al liberar unidad: " + e.message);
       }
     }
 
-    function abrirModalTransferir(id, placa) {
-      idTurnoTransferir = id;
-      document.getElementById('txtPlacaTransferir').innerText = placa;
-      document.getElementById('txtMotivoTransferir').value = '';
-      document.getElementById('modalTransferir').classList.remove('hidden');
+    // ============================================================
+    // ACCIÓN 3: MODAL PROGRAMAR POR INDUCCIÓN
+    // ============================================================
+    function abrirModalInduccion() {
+      const select = document.getElementById('selectClienteInduccion');
+      const clientesOrdenados = Array.from(listaClientesUnicos).sort();
+
+      select.innerHTML = `<option value="">-- Elige un cliente --</option>` + 
+        clientesOrdenados.map(c => `<option value="${c}">${c}</option>`).join('');
+
+      unidadCandidataInduccion = null;
+      document.getElementById('btnConfirmarInduccion').disabled = true;
+      document.getElementById('cajaPreviewInduccion').innerHTML = 
+        `<p class="text-slate-400 text-center font-semibold">Selecciona un cliente para buscar la unidad disponible más próxima...</p>`;
+
+      document.getElementById('modalInduccion').classList.remove('hidden');
     }
 
-    function cerrarModalTransferir() {
-      idTurnoTransferir = null;
-      document.getElementById('modalTransferir').classList.add('hidden');
+    function cerrarModalInduccion() {
+      document.getElementById('modalInduccion').classList.add('hidden');
+      unidadCandidataInduccion = null;
     }
 
-    async function confirmarTransferencia() {
-      const destino = document.getElementById('selectDestinoTransferir').value;
-      const motivo = document.getElementById('txtMotivoTransferir').value.trim();
+    function previsualizarUnidadInduccion() {
+      const cliente = document.getElementById('selectClienteInduccion').value;
+      const capacidad = document.getElementById('selectCapacidadInduccion').value;
+      const servicio = document.getElementById('selectServicioInduccion').value;
+      const caja = document.getElementById('cajaPreviewInduccion');
+      const btn = document.getElementById('btnConfirmarInduccion');
 
-      if (!motivo) {
-        alert("Debes escribir un motivo obligatorio para la transferencia.");
+      if (!cliente) {
+        unidadCandidataInduccion = null;
+        btn.disabled = true;
+        caja.innerHTML = `<p class="text-slate-400 text-center font-semibold">Selecciona un cliente para buscar...</p>`;
         return;
       }
 
+      // Buscar en orden FIFO estricto la PRIMERA unidad DISPONIBLE que cumpla:
+      // 1. Estado == DISPONIBLE
+      // 2. Cubicaje == capacidad
+      // 3. Servicio == servicio
+      // 4. Chofer tiene el cliente en su array inducciones_clientes
+      const candidata = todasLasUnidades.find(u => {
+        if (u.estado !== 'DISPONIBLE') return false;
+        if (u.cubicaje !== capacidad) return false;
+        if (u.servicio !== servicio) return false;
+
+        const datosChofer = mapaConductores[u.licencia];
+        if (!datosChofer || !Array.isArray(datosChofer.inducciones_clientes)) return false;
+
+        return datosChofer.inducciones_clientes.some(ind => ind.trim().toUpperCase() === cliente);
+      });
+
+      if (candidata) {
+        unidadCandidataInduccion = candidata;
+        btn.disabled = false;
+        caja.className = "p-3 rounded-xl border-2 border-emerald-300 bg-emerald-50 space-y-1";
+        caja.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-black text-emerald-800 uppercase bg-emerald-200 px-2 py-0.5 rounded">Unidad Más Próxima Encontrada</span>
+            <span class="font-black text-emerald-900">${candidata.cubicaje} • ${candidata.servicio}</span>
+          </div>
+          <p class="text-sm font-black text-slate-900 pt-1">${candidata.placa} <span class="text-xs font-semibold text-slate-600">(${candidata.empresa || '-'})</span></p>
+          <p class="text-xs text-slate-700">Conductor: <strong>${candidata.conductor}</strong></p>
+        `;
+      } else {
+        unidadCandidataInduccion = null;
+        btn.disabled = true;
+        caja.className = "p-3 rounded-xl border border-red-200 bg-red-50";
+        caja.innerHTML = `
+          <p class="text-red-700 font-bold text-center">
+            <i class="fa-solid fa-circle-xmark mr-1"></i>No hay unidades disponibles con capacidad <strong>${capacidad}</strong> (${servicio}) cuyo chofer tenga inducción para <strong>${cliente}</strong>.
+          </p>
+        `;
+      }
+    }
+
+    async function ejecutarProgramacionInduccion() {
+      if (!unidadCandidataInduccion) return;
+
+      const cliente = document.getElementById('selectClienteInduccion').value;
+      const btn = document.getElementById('btnConfirmarInduccion');
+      btn.disabled = true;
+
       try {
-        const turno = todasLasUnidades.find(t => t.id === idTurnoTransferir);
-        const bitacora = turno && turno.bitacora_eventos ? [...turno.bitacora_eventos] : [];
+        const bitacora = unidadCandidataInduccion.bitacora_eventos ? [...unidadCandidataInduccion.bitacora_eventos] : [];
 
         bitacora.push({
           fecha: new Date().toISOString(),
           usuario: MI_IDENTIDAD,
-          tipo: 'TRANSFERENCIA_GRUPO',
-          motivo: `Transferido de ${MI_IDENTIDAD} hacia ${destino}. Motivo: ${motivo}`
+          tipo: 'PROGRAMADO_POR_INDUCCION',
+          motivo: `Programado por inducción para cliente ${cliente} por ${MI_NOMBRE_PANEL}`
         });
 
-        await db.collection('registros_turnos').doc(idTurnoTransferir).update({
-          asignadoA: destino,
+        await db.collection('registros_turnos').doc(unidadCandidataInduccion.id).update({
+          estado: 'PROGRAMADO POR INDUCCIÓN',
+          asignadoA: MI_IDENTIDAD,
+          clienteInduccion: cliente,
+          fechaHoraAsignado: firebase.firestore.FieldValue.serverTimestamp(),
           bitacora_eventos: bitacora
         });
 
-        cerrarModalTransferir();
+        cerrarModalInduccion();
       } catch (e) {
-        alert("Error al transferir: " + e.message);
+        alert("Error al programar por inducción: " + e.message);
+        btn.disabled = false;
       }
     }
   </script>
