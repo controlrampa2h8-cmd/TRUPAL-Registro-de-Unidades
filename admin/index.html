@@ -32,8 +32,11 @@
         </div>
       </div>
 
-      <!-- ACCESOS RÁPIDOS A OTROS PANELES -->
       <div class="flex flex-wrap gap-2 text-xs font-bold">
+        <button onclick="abrirModalMotivos()" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 px-3 py-1.5 rounded-lg flex items-center space-x-1.5 shadow">
+          <i class="fa-solid fa-tags text-amber-400"></i>
+          <span>Gestionar Motivos</span>
+        </button>
         <a href="../conductor/" target="_blank" class="bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-lg flex items-center space-x-1.5 shadow">
           <i class="fa-solid fa-mobile-screen"></i>
           <span>Abrir Conductor</span>
@@ -69,7 +72,7 @@
         </div>
       </div>
 
-      <!-- BANDEJA 2: EXCEPCIONES DE SERVICIO (CAMBIO A PROVINCIA/LOCAL) -->
+      <!-- BANDEJA 2: EXCEPCIONES DE SERVICIO -->
       <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col">
         <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
           <h2 class="font-black text-sm text-slate-800 uppercase flex items-center space-x-2">
@@ -128,19 +131,26 @@
       </div>
     </div>
 
-    <!-- FILA INFERIOR: TABLERO GENERAL DE TURNOS Y GESTIÓN -->
+    <!-- FILA INFERIOR: CONTROL MAESTRO DE UNIDADES -->
     <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
       <div class="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-slate-100 gap-3 mb-4">
         <div>
           <h2 class="font-black text-sm text-slate-800 uppercase flex items-center space-x-2">
             <i class="fa-solid fa-list-check text-blue-600 text-base"></i>
-            <span>Control Maestro de Unidades Registrados</span>
+            <span>Control Maestro de Unidades Registradas</span>
           </h2>
-          <p class="text-xs text-slate-500 mt-0.5">Monitoreo en vivo y resolución manual de estados.</p>
+          <p class="text-xs text-slate-500 mt-0.5">Monitoreo en vivo, trazabilidad de eventos y resolución manual de estados.</p>
         </div>
-        <span id="badgeTotalUnidades" class="text-xs font-black bg-blue-50 text-blue-700 px-3 py-1 rounded-full w-fit">
-          0 Unidades Activas
-        </span>
+        <div class="flex items-center space-x-3">
+          <select id="filtroEstadoTabla" onchange="renderizarTablaMaestra()" class="text-xs font-bold p-2 border border-slate-300 rounded-xl focus:outline-none bg-slate-50">
+            <option value="ACTIVAS">Mostrar: Unidades Activas</option>
+            <option value="TODAS">Mostrar: Todas (Incluye Anuladas)</option>
+            <option value="ANULADAS">Mostrar: Solo Anuladas</option>
+          </select>
+          <span id="badgeTotalUnidades" class="text-xs font-black bg-blue-50 text-blue-700 px-3 py-1 rounded-full whitespace-nowrap">
+            0 Unidades
+          </span>
+        </div>
       </div>
 
       <!-- TABLA GENERAL -->
@@ -169,21 +179,191 @@
 
   </main>
 
+  <!-- ============================================== -->
+  <!-- MODAL 1: REGISTRAR MOTIVO (ANULAR / FORZAR)    -->
+  <!-- ============================================== -->
+  <div id="modalAccionMotivo" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div class="flex items-center space-x-2">
+          <div id="iconoModalAccion" class="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-white bg-red-600">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+          </div>
+          <div>
+            <h3 id="tituloModalAccion" class="font-black text-sm text-slate-900">Anular Turno de Unidad</h3>
+            <p id="subtituloModalAccion" class="text-[11px] text-slate-500 font-semibold">Placa: ABC-123</p>
+          </div>
+        </div>
+        <button onclick="cerrarModalAccion()" class="text-slate-400 hover:text-slate-600 text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-700 mb-1">Selecciona el motivo justificado:</label>
+        <select id="selectMotivoAccion" class="w-full text-xs font-bold p-3 border-2 border-slate-300 rounded-xl focus:border-blue-600 focus:outline-none bg-white">
+          <!-- Dinámico -->
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-700 mb-1">Detalle o comentario adicional (Opcional):</label>
+        <textarea id="txtComentarioAccion" rows="2" placeholder="Escribe alguna observación complementaria..." class="w-full text-xs p-3 border-2 border-slate-300 rounded-xl focus:border-blue-600 focus:outline-none"></textarea>
+      </div>
+
+      <div class="flex space-x-2 pt-2">
+        <button onclick="cerrarModalAccion()" class="w-1/2 py-2.5 rounded-xl border border-slate-300 font-bold text-xs text-slate-600 hover:bg-slate-50">
+          Cancelar
+        </button>
+        <button id="btnConfirmarAccionModal" onclick="ejecutarAccionConMotivo()" class="w-1/2 py-2.5 rounded-xl font-black text-xs text-white bg-red-600 hover:bg-red-700 shadow">
+          Confirmar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- MODAL 2: HISTORIAL Y BITÁCORA DE UNIDAD        -->
+  <!-- ============================================== -->
+  <div id="modalBitacora" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-5 shadow-2xl flex flex-col max-h-[85vh]">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div class="flex items-center space-x-2">
+          <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+          </div>
+          <div>
+            <h3 class="font-black text-sm text-slate-900">Historial y Trazabilidad del Turno</h3>
+            <p id="subtituloBitacora" class="text-[11px] text-slate-500 font-bold">Placa: ABC-123</p>
+          </div>
+        </div>
+        <button onclick="cerrarModalBitacora()" class="text-slate-400 hover:text-slate-600 text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- LÍNEA DE TIEMPO -->
+      <div id="cuerpoBitacora" class="py-4 space-y-4 overflow-y-auto flex-1 text-xs pr-1">
+        <!-- Render dinámico -->
+      </div>
+
+      <div class="pt-3 border-t border-slate-100 text-right">
+        <button onclick="cerrarModalBitacora()" class="py-2 px-4 rounded-xl bg-slate-200 hover:bg-slate-300 font-bold text-xs text-slate-700">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- MODAL 3: GESTOR DE MOTIVOS ESTANDARIZADOS       -->
+  <!-- ============================================== -->
+  <div id="modalMotivosConfig" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-xl w-full p-5 shadow-2xl flex flex-col max-h-[85vh] space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div class="flex items-center space-x-2">
+          <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-bold">
+            <i class="fa-solid fa-tags"></i>
+          </div>
+          <div>
+            <h3 class="font-black text-sm text-slate-900">Catálogo de Motivos Estandarizados</h3>
+            <p class="text-[11px] text-slate-500 font-semibold">Configura las opciones que aparecerán en los menús de anulación y reincorporación.</p>
+          </div>
+        </div>
+        <button onclick="cerrarModalMotivos()" class="text-slate-400 hover:text-slate-600 text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 overflow-y-auto pr-1">
+        
+        <!-- MOTIVOS DE ANULACIÓN -->
+        <div class="bg-red-50/50 border border-red-200 rounded-xl p-3 flex flex-col">
+          <span class="font-black text-xs text-red-900 uppercase mb-2 flex items-center justify-between">
+            <span>Motivos de Anulación</span>
+            <i class="fa-solid fa-ban text-red-500"></i>
+          </span>
+          <div class="flex space-x-1 mb-2">
+            <input type="text" id="inpNuevoMotivoAnulacion" placeholder="Nuevo motivo..." class="w-full text-xs p-2 border border-slate-300 rounded-lg focus:outline-none">
+            <button onclick="agregarMotivo('anulacion')" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg text-xs font-bold">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
+          <div id="listaMotivosAnulacion" class="space-y-1.5 flex-1 overflow-y-auto max-h-48 text-xs">
+            <!-- Dinámico -->
+          </div>
+        </div>
+
+        <!-- MOTIVOS DE FORZAR DISPONIBLE -->
+        <div class="bg-emerald-50/50 border border-emerald-200 rounded-xl p-3 flex flex-col">
+          <span class="font-black text-xs text-emerald-900 uppercase mb-2 flex items-center justify-between">
+            <span>Motivos de Reincorporación</span>
+            <i class="fa-solid fa-rotate-left text-emerald-600"></i>
+          </span>
+          <div class="flex space-x-1 mb-2">
+            <input type="text" id="inpNuevoMotivoDisponible" placeholder="Nuevo motivo..." class="w-full text-xs p-2 border border-slate-300 rounded-lg focus:outline-none">
+            <button onclick="agregarMotivo('disponible')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded-lg text-xs font-bold">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
+          <div id="listaMotivosDisponible" class="space-y-1.5 flex-1 overflow-y-auto max-h-48 text-xs">
+            <!-- Dinámico -->
+          </div>
+        </div>
+
+      </div>
+
+      <div class="pt-3 border-t border-slate-100 text-right">
+        <button onclick="cerrarModalMotivos()" class="py-2 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow">
+          Guardar y Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script>
     let solicitudesSegunda = [];
-    let turnosActivos = [];
+    let todosLosTurnos = [];
+
+    // Catálogo por defecto
+    let catalogoMotivos = {
+      anulacion: [
+        "Falta o vencimiento de documentos en garita",
+        "Retiro voluntario del transportista sin aviso",
+        "Observación física en rampa no subsanada (Carpa/Piso)",
+        "Registro duplicado por error de chofer",
+        "Incumplimiento de estándares SSOMA TRUPAL"
+      ],
+      disponible: [
+        "Subsanación de observación documental",
+        "Corrección de error operativo de asignación",
+        "Cancelación justificada de orden por programador",
+        "Reincorporación autorizada por Control Rampa",
+        "Retorno a disponibilidad tras reparación menor"
+      ]
+    };
+
+    let accionPendiente = {
+      tipo: null, // 'ANULAR' o 'DISPONIBLE'
+      idTurno: null,
+      placa: null
+    };
 
     window.onload = function() {
       cargarGeocercas();
+      cargarCatalogoMotivos();
       escucharSolicitudesSegunda();
       escucharTurnosMaestros();
     };
 
     function cargarTodo() {
       cargarGeocercas();
+      cargarCatalogoMotivos();
     }
 
-    // 1. CARGAR Y GUARDAR GEOCERCAS
+    // ==========================================
+    // 1. GEOCERCAS
+    // ==========================================
     async function cargarGeocercas() {
       try {
         const doc = await db.collection('config').doc('geocercas').get();
@@ -223,7 +403,77 @@
       }
     }
 
-    // 2. ESCUCHAR SOLICITUDES DE 2DA UNIDAD
+    // ==========================================
+    // 2. CATÁLOGO DE MOTIVOS ESTANDARIZADOS
+    // ==========================================
+    async function cargarCatalogoMotivos() {
+      try {
+        const doc = await db.collection('config').doc('motivos_admin').get();
+        if (doc.exists) {
+          catalogoMotivos = doc.data();
+        } else {
+          // Inicializar por primera vez
+          await db.collection('config').doc('motivos_admin').set(catalogoMotivos);
+        }
+      } catch (e) {
+        console.error("Error al cargar motivos:", e);
+      }
+    }
+
+    function abrirModalMotivos() {
+      renderizarListasMotivosConfig();
+      document.getElementById('modalMotivosConfig').classList.remove('hidden');
+    }
+
+    function cerrarModalMotivos() {
+      document.getElementById('modalMotivosConfig').classList.add('hidden');
+    }
+
+    function renderizarListasMotivosConfig() {
+      const cAnul = document.getElementById('listaMotivosAnulacion');
+      const cDisp = document.getElementById('listaMotivosDisponible');
+
+      cAnul.innerHTML = catalogoMotivos.anulacion.map((m, idx) => `
+        <div class="p-2 bg-white rounded-lg border border-red-200 flex items-center justify-between gap-1 shadow-sm">
+          <span class="text-slate-700 leading-tight">${m}</span>
+          <button onclick="eliminarMotivo('anulacion', ${idx})" class="text-red-500 hover:text-red-700 px-1">
+            <i class="fa-solid fa-trash-can"></i>
+          </button>
+        </div>
+      `).join('');
+
+      cDisp.innerHTML = catalogoMotivos.disponible.map((m, idx) => `
+        <div class="p-2 bg-white rounded-lg border border-emerald-200 flex items-center justify-between gap-1 shadow-sm">
+          <span class="text-slate-700 leading-tight">${m}</span>
+          <button onclick="eliminarMotivo('disponible', ${idx})" class="text-red-500 hover:text-red-700 px-1">
+            <i class="fa-solid fa-trash-can"></i>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    async function agregarMotivo(tipo) {
+      const inp = tipo === 'anulacion' ? document.getElementById('inpNuevoMotivoAnulacion') : document.getElementById('inpNuevoMotivoDisponible');
+      const val = inp.value.trim();
+      if (!val) return;
+
+      catalogoMotivos[tipo].push(val);
+      inp.value = '';
+      await db.collection('config').doc('motivos_admin').set(catalogoMotivos);
+      renderizarListasMotivosConfig();
+    }
+
+    async function eliminarMotivo(tipo, idx) {
+      if (confirm("¿Deseas eliminar este motivo de la lista?")) {
+        catalogoMotivos[tipo].splice(idx, 1);
+        await db.collection('config').doc('motivos_admin').set(catalogoMotivos);
+        renderizarListasMotivosConfig();
+      }
+    }
+
+    // ==========================================
+    // 3. SOLICITUDES 2DA UNIDAD & EXCEPCIONES
+    // ==========================================
     function escucharSolicitudesSegunda() {
       db.collection('solicitudes_segunda_unidad')
         .onSnapshot((snap) => {
@@ -250,7 +500,7 @@
               <span class="font-black text-amber-900 text-sm">Placa Activa: ${s.placaActiva || '---'}</span>
               <span class="text-[10px] bg-amber-200 text-amber-800 font-bold px-1.5 py-0.5 rounded">Pide 2da</span>
             </div>
-            <p class="text-[11px] text-slate-500 mt-0.5">El chofer solicita desbloqueo para registrar un segundo camión.</p>
+            <p class="text-[11px] text-slate-600 mt-0.5">Chofer: <strong>${s.conductor || '---'}</strong> (${s.licencia || '---'})</p>
           </div>
           <div class="flex items-center space-x-1.5 shrink-0">
             <button onclick="responderSegundaUnidad('${s.id}', true)" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold py-1.5 px-3 rounded-lg text-xs shadow">
@@ -275,22 +525,19 @@
       }
     }
 
-    // 3. ESCUCHAR TABLERO MAESTRO Y EXCEPCIONES
+    // ==========================================
+    // 4. TABLERO GENERAL DE TURNOS
+    // ==========================================
     function escucharTurnosMaestros() {
       db.collection('registros_turnos')
         .onSnapshot((snap) => {
-          const todos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          todosLosTurnos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-          // Orden cronológico FIFO
-          todos.sort((a, b) => {
+          todosLosTurnos.sort((a, b) => {
             const tA = a.fechaHoraRegistro ? (a.fechaHoraRegistro.toMillis ? a.fechaHoraRegistro.toMillis() : new Date(a.fechaHoraRegistro).getTime()) : 0;
             const tB = b.fechaHoraRegistro ? (b.fechaHoraRegistro.toMillis ? b.fechaHoraRegistro.toMillis() : new Date(b.fechaHoraRegistro).getTime()) : 0;
             return tA - tB;
           });
-
-          turnosActivos = todos.filter(t => !['DESPACHADO', 'CANCELADO_VOLUNTARIO', 'ANULADO'].includes(t.estado));
-
-          document.getElementById('badgeTotalUnidades').innerText = `${turnosActivos.length} Unidades Activas`;
 
           renderizarExcepciones();
           renderizarTablaMaestra();
@@ -299,7 +546,7 @@
 
     function renderizarExcepciones() {
       const cont = document.getElementById('listaExcepcionesServicio');
-      const pendientes = turnosActivos.filter(t => t.estado === 'PENDIENTE_ADMIN');
+      const pendientes = todosLosTurnos.filter(t => t.estado === 'PENDIENTE_ADMIN');
 
       document.getElementById('badgeContadorExcepciones').innerText = `${pendientes.length} Pendientes`;
 
@@ -331,15 +578,20 @@
 
     async function responderExcepcion(idTurno, aprobado) {
       try {
-        if (aprobado) {
-          await db.collection('registros_turnos').doc(idTurno).update({
-            estado: 'DISPONIBLE'
-          });
-        } else {
-          await db.collection('registros_turnos').doc(idTurno).update({
-            estado: 'ANULADO'
-          });
-        }
+        const turno = todosLosTurnos.find(t => t.id === idTurno);
+        const bitacora = turno && turno.bitacora_eventos ? [...turno.bitacora_eventos] : [];
+
+        bitacora.push({
+          fecha: new Date().toISOString(),
+          usuario: 'ADMIN',
+          tipo: aprobado ? 'EXCEPCION_APROBADA' : 'EXCEPCION_RECHAZADA',
+          motivo: aprobado ? `Aprobado cambio a ${turno.servicio}` : 'Rechazada solicitud de excepción'
+        });
+
+        await db.collection('registros_turnos').doc(idTurno).update({
+          estado: aprobado ? 'DISPONIBLE' : 'ANULADO',
+          bitacora_eventos: bitacora
+        });
       } catch (e) {
         alert("Error al procesar: " + e.message);
       }
@@ -347,14 +599,26 @@
 
     function renderizarTablaMaestra() {
       const cuerpo = document.getElementById('tablaCuerpoTurnos');
+      const filtro = document.getElementById('filtroEstadoTabla').value;
 
-      if (turnosActivos.length === 0) {
-        cuerpo.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-slate-400 font-semibold">No hay unidades en patio actualmente.</td></tr>`;
+      let filtrados = [];
+      if (filtro === 'ACTIVAS') {
+        filtrados = todosLosTurnos.filter(t => !['DESPACHADO', 'CANCELADO_VOLUNTARIO', 'ANULADO'].includes(t.estado));
+      } else if (filtro === 'ANULADAS') {
+        filtrados = todosLosTurnos.filter(t => t.estado === 'ANULADO');
+      } else {
+        filtrados = todosLosTurnos;
+      }
+
+      document.getElementById('badgeTotalUnidades').innerText = `${filtrados.length} Unidades`;
+
+      if (filtrados.length === 0) {
+        cuerpo.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-slate-400 font-semibold">No se encontraron unidades con este filtro.</td></tr>`;
         return;
       }
 
-      cuerpo.innerHTML = turnosActivos.map((t, idx) => `
-        <tr class="hover:bg-slate-50">
+      cuerpo.innerHTML = filtrados.map((t, idx) => `
+        <tr class="hover:bg-slate-50 transition-colors">
           <td class="p-3 font-black text-slate-700">#${idx + 1}</td>
           <td class="p-3">
             <span class="font-black text-slate-900 block">${t.placa}</span>
@@ -376,16 +640,25 @@
               t.estado === 'DISPONIBLE' ? 'bg-emerald-100 text-emerald-800' :
               t.estado === 'PENDIENTE_ADMIN' ? 'bg-indigo-100 text-indigo-800' :
               t.estado === 'ASIGNADO' ? 'bg-blue-100 text-blue-800' :
-              t.estado === 'PAUSADO_MECANICO' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-800'
+              t.estado === 'PAUSADO_MECANICO' ? 'bg-amber-100 text-amber-800' : 
+              t.estado === 'ANULADO' ? 'bg-red-100 text-red-800' : 'bg-slate-100 text-slate-800'
             }">
               ${t.estado}
             </span>
           </td>
           <td class="p-3 text-right space-x-1 whitespace-nowrap">
-            <button onclick="forzarDisponible('${t.id}')" title="Forzar a Disponible" class="p-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg">
+            <!-- BOTÓN VER HISTORIAL / BITÁCORA -->
+            <button onclick="verBitacoraTurno('${t.id}')" title="Ver Historial del Turno" class="p-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg">
+              <i class="fa-solid fa-clock-rotate-left"></i>
+            </button>
+
+            <!-- BOTÓN FORZAR A DISPONIBLE -->
+            <button onclick="solicitarAccionMotivo('DISPONIBLE', '${t.id}', '${t.placa}')" title="Restablecer / Forzar a Disponible" class="p-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg">
               <i class="fa-solid fa-rotate-left"></i>
             </button>
-            <button onclick="anularRegistroAdmin('${t.id}')" title="Anular turno" class="p-1.5 bg-red-50 text-red-700 hover:bg-red-100 rounded-lg">
+
+            <!-- BOTÓN ANULAR -->
+            <button onclick="solicitarAccionMotivo('ANULAR', '${t.id}', '${t.placa}')" title="Anular Turno con Motivo" class="p-1.5 bg-red-50 text-red-700 hover:bg-red-100 rounded-lg">
               <i class="fa-solid fa-trash-can"></i>
             </button>
           </td>
@@ -393,16 +666,139 @@
       `).join('');
     }
 
-    async function forzarDisponible(id) {
-      if (confirm("¿Deseas restablecer el estado de esta unidad a DISPONIBLE?")) {
-        await db.collection('registros_turnos').doc(id).update({ estado: 'DISPONIBLE', asignadoA: null });
+    // ==========================================
+    // 5. MODAL DE ACCIÓN CON MOTIVO (ANULAR / FORZAR)
+    // ==========================================
+    function solicitarAccionMotivo(tipo, idTurno, placa) {
+      accionPendiente = { tipo, idTurno, placa };
+
+      const modal = document.getElementById('modalAccionMotivo');
+      const icono = document.getElementById('iconoModalAccion');
+      const titulo = document.getElementById('tituloModalAccion');
+      const subtitulo = document.getElementById('subtituloModalAccion');
+      const select = document.getElementById('selectMotivoAccion');
+      const btnConfirmar = document.getElementById('btnConfirmarAccionModal');
+      document.getElementById('txtComentarioAccion').value = '';
+
+      subtitulo.innerText = `Placa: ${placa}`;
+
+      if (tipo === 'ANULAR') {
+        icono.className = "w-8 h-8 rounded-lg flex items-center justify-center font-bold text-white bg-red-600";
+        icono.innerHTML = `<i class="fa-solid fa-trash-can"></i>`;
+        titulo.innerText = "Anular Turno de Unidad";
+        btnConfirmar.className = "w-1/2 py-2.5 rounded-xl font-black text-xs text-white bg-red-600 hover:bg-red-700 shadow";
+        btnConfirmar.innerText = "Confirmar Anulación";
+
+        select.innerHTML = catalogoMotivos.anulacion.map(m => `<option value="${m}">${m}</option>`).join('');
+      } else {
+        icono.className = "w-8 h-8 rounded-lg flex items-center justify-center font-bold text-white bg-emerald-600";
+        icono.innerHTML = `<i class="fa-solid fa-rotate-left"></i>`;
+        titulo.innerText = "Reincorporar / Forzar a Disponible";
+        btnConfirmar.className = "w-1/2 py-2.5 rounded-xl font-black text-xs text-white bg-emerald-600 hover:bg-emerald-700 shadow";
+        btnConfirmar.innerText = "Confirmar Reincorporación";
+
+        select.innerHTML = catalogoMotivos.disponible.map(m => `<option value="${m}">${m}</option>`).join('');
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    function cerrarModalAccion() {
+      document.getElementById('modalAccionMotivo').classList.add('hidden');
+      accionPendiente = { tipo: null, idTurno: null, placa: null };
+    }
+
+    async function ejecutarAccionConMotivo() {
+      const { tipo, idTurno, placa } = accionPendiente;
+      if (!idTurno) return;
+
+      const motivoSeleccionado = document.getElementById('selectMotivoAccion').value;
+      const comentario = document.getElementById('txtComentarioAccion').value.trim();
+      const detalleFinal = comentario ? `${motivoSeleccionado} - Nota: ${comentario}` : motivoSeleccionado;
+
+      try {
+        const turno = todosLosTurnos.find(t => t.id === idTurno);
+        const bitacora = turno && turno.bitacora_eventos ? [...turno.bitacora_eventos] : [];
+
+        if (tipo === 'ANULAR') {
+          bitacora.push({
+            fecha: new Date().toISOString(),
+            usuario: 'ADMIN',
+            tipo: 'ANULACION_ADMIN',
+            motivo: detalleFinal
+          });
+
+          await db.collection('registros_turnos').doc(idTurno).update({
+            estado: 'ANULADO',
+            bitacora_eventos: bitacora
+          });
+        } else {
+          bitacora.push({
+            fecha: new Date().toISOString(),
+            usuario: 'ADMIN',
+            tipo: 'REINCORPORACION_DISPONIBLE',
+            motivo: detalleFinal
+          });
+
+          await db.collection('registros_turnos').doc(idTurno).update({
+            estado: 'DISPONIBLE',
+            asignadoA: null,
+            bitacora_eventos: bitacora
+          });
+        }
+
+        cerrarModalAccion();
+      } catch (e) {
+        alert("Error al actualizar estado: " + e.message);
       }
     }
 
-    async function anularRegistroAdmin(id) {
-      if (confirm("¿Estás seguro de anular este registro?")) {
-        await db.collection('registros_turnos').doc(id).update({ estado: 'ANULADO' });
+    // ==========================================
+    // 6. VISOR DE HISTORIAL Y BITÁCORA
+    // ==========================================
+    function verBitacoraTurno(idTurno) {
+      const turno = todosLosTurnos.find(t => t.id === idTurno);
+      if (!turno) return;
+
+      document.getElementById('subtituloBitacora').innerText = `Placa: ${turno.placa} • ${turno.conductor || 'Chofer'} • Estado Actual: ${turno.estado}`;
+      const cuerpo = document.getElementById('cuerpoBitacora');
+
+      const eventos = turno.bitacora_eventos || [];
+
+      if (eventos.length === 0) {
+        cuerpo.innerHTML = `<p class="text-slate-400 text-center py-6">No hay eventos registrados para este turno.</p>`;
+      } else {
+        cuerpo.innerHTML = eventos.slice().reverse().map((ev, idx) => {
+          const fechaFormateada = ev.fecha ? new Date(ev.fecha).toLocaleString('es-PE', { 
+            day: '2-digit', month: '2-digit', year: 'numeric', 
+            hour: '2-digit', minute: '2-digit', second: '2-digit' 
+          }) : 'Fecha no registrada';
+
+          const esAdmin = ev.usuario === 'ADMIN';
+
+          return `
+            <div class="relative pl-6 pb-2 border-l-2 border-slate-200 last:border-l-0">
+              <div class="absolute -left-2 top-0 w-4 h-4 rounded-full ${esAdmin ? 'bg-amber-500' : 'bg-blue-600'} border-2 border-white shadow"></div>
+              <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-1">
+                <div class="flex items-center justify-between">
+                  <span class="font-black text-slate-800 uppercase text-[11px]">${ev.tipo || 'EVENTO'}</span>
+                  <span class="text-[10px] text-slate-400 font-semibold">${fechaFormateada}</span>
+                </div>
+                <p class="text-slate-700 font-medium">${ev.motivo || 'Sin detalle'}</p>
+                <div class="text-[10px] text-slate-500 font-bold pt-1 border-t border-slate-100 flex items-center justify-between">
+                  <span>Operador: <strong class="${esAdmin ? 'text-amber-700' : 'text-blue-700'}">${ev.usuario || 'SISTEMA'}</strong></span>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
       }
+
+      document.getElementById('modalBitacora').classList.remove('hidden');
+    }
+
+    function cerrarModalBitacora() {
+      document.getElementById('modalBitacora').classList.add('hidden');
     }
   </script>
 </body>
